@@ -53,7 +53,7 @@ form input {
 }
 
 .js-toDoForm {
-  margin-bottom: 10px;
+  margin: 10px 0;
 }
 
 form input::placeholder {
@@ -64,6 +64,11 @@ form input::placeholder {
   padding: 5px;
   box-sizing: border-box;
 }
+
+.js-toDoForm input {
+  width: 150px;
+}
+
 
 .showing,
 .js-clock,
@@ -83,8 +88,12 @@ form input::placeholder {
   letter-spacing: 10px;
 }
 
+.js-form input {
+  width: 140px;
+}
+
 .js-toDoForm input {
-  width: 200px;
+  width: 190px;
 }
 
 .js-toDoList {
