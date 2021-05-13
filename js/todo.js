@@ -9,6 +9,7 @@ let toDos = [];
 function deleteToDo(event) {
     const btn = event.target;
     const li = btn.parentNode;
+    container.classList.add(SHOWING_CN);
     toDoList.removeChild(li);
     const cleanToDos = toDos.filter(function(toDo){
         return toDo.id !== parseInt(li.id);
@@ -44,6 +45,7 @@ function paintToDo(text){
 function handleSubmit(event) {
     event.preventDefault();
     const currentValue = toDoInput.value;
+    container.classList.remove(SHOWING_CN);
     paintToDo(currentValue);
     toDoInput.value = "";
 }
