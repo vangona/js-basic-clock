@@ -4,7 +4,7 @@ const IMG_NUMBER = 17;
 
 function paintImage(imgNumber){
     const image = new Image();
-    image.src = `https://cdn.jsdelivr.net/gh/vangona/js-basic-clock/images/${imgNumber + 1}.jpg`;
+    image.src = `./images/${imgNumber + 1}.jpg`;
     image.classList.add("bgImage");
     body.prepend(image);
 }
