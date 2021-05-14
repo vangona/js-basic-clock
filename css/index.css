@@ -114,6 +114,7 @@ button {
 }
 
 .js-goodwords {
+  opacity: 0;
   margin: 0px;
   padding: 20px 10px;
   background-color: rgba(0, 0, 0, 0.4);
@@ -124,6 +125,7 @@ button {
   word-break: keep-all;
   width: 35%;
   text-align: center;
+  animation: fadeIn 1s linear forwards;
 }
 
 @keyframes fadeIn {
