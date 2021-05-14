@@ -1,8 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap");
 
 body {
   color: white;
-  font-family: 'Nanum Myeongjo', serif;
+  font-family: "Nanum Myeongjo", serif;
 }
 
 .form,
@@ -28,10 +28,10 @@ body {
 }
 
 form input {
-  background-color: rgba(0,0,0,0);
+  background-color: rgba(0, 0, 0, 0);
   border: none;
   border-bottom: 1px solid rgba(255, 255, 255, 0.5);
-  font-family: 'Nanum Myeongjo', serif;
+  font-family: "Nanum Myeongjo", serif;
   font-style: italic;
   font-size: 20px;
   color: white;
@@ -45,7 +45,7 @@ form input {
 }
 
 form input::placeholder {
-  font-family: 'Nanum Myeongjo', serif;
+  font-family: "Nanum Myeongjo", serif;
   font-style: italic;
   font-size: 20px;
   color: white;
@@ -57,7 +57,6 @@ form input::placeholder {
   width: 150px;
 }
 
-
 .showing,
 .js-clock,
 .js-toDoForm,
@@ -65,7 +64,6 @@ form input::placeholder {
   display: flex;
   animation: fadeIn 0.5s linear;
 }
-
 
 .showing {
   margin-top: 10px;
@@ -106,23 +104,29 @@ form input::placeholder {
 
 button {
   margin-right: 10px;
-  background-color: rgba(0,0,0,0);
+  background-color: rgba(0, 0, 0, 0);
   border: none;
   color: white;
 }
 
-.js-goodwords {
+.goodwords-container {
   margin-top: 50px;
-  font-size: 15px;
+}
+
+.js-goodwords {
+  margin: 0px;
+  padding: 20px 10px;
+  background-color: rgba(0, 0, 0, 0.4);
+  font-size: 13px;
   font-style: italic;
   line-height: 30px;
   letter-spacing: 5px;
-  word-break:keep-all;
-  width: 33%;
+  word-break: keep-all;
+  width: 35%;
   text-align: center;
 }
 
-@keyframes fadeIn{
+@keyframes fadeIn {
   from {
     opacity: 0;
   }
@@ -134,17 +138,16 @@ button {
 @keyframes fadeOut {
   from {
     opacity: 1;
-
   }
   to {
     opacity: 0;
   }
 }
 
-.bgImage{
+.bgImage {
   position: absolute;
-  top:0;
-  left:0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   z-index: -1;
@@ -160,20 +163,22 @@ button {
   right: 30px;
 }
 
-@media screen and (max-height : 767px) {
-  .js-goodwords {
+@media screen and (max-height: 767px) {
+  .goodwords-container {
     margin-top: 20px;
   }
 }
 
-@media screen and (max-width : 1280px) {
+@media screen and (max-width: 1280px) {
   .js-toDoList {
     margin-left: 42%;
     margin-right: 42%;
     width: 25%;
   }
-  .js-goodwords {
+  .goodwords-container {
     margin-top: 40px;
+  }
+  .js-goodwords {
     margin-bottom: 0px;
     font-size: 12px;
     width: 50%;
@@ -181,20 +186,22 @@ button {
   }
 }
 
-@media screen and (max-width : 960px) {
+@media screen and (max-width: 960px) {
   .js-toDoList {
     margin-left: 40%;
     margin-right: 40%;
     width: 20%;
   }
-  .js-goodwords {
+  .goodwords-container {
     margin-top: 25px;
+  }
+  .js-goodwords {
     font-size: 11px;
     width: 70%;
   }
 }
 
-@media screen and (max-width : 767px) {
+@media screen and (max-width: 767px) {
   .js-clock {
     font-size: 18px;
     margin-top: 20%;
@@ -222,4 +229,3 @@ button {
     right: 20px;
   }
 }
-
