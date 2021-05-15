@@ -1,8 +1,17 @@
 @import url("https://fonts.googleapis.com/css2?family=Nanum+Myeongjo&display=swap");
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
   color: white;
   font-family: "Nanum Myeongjo", serif;
+  overflow: hidden;
 }
 
 .form,
@@ -42,6 +51,7 @@ form input {
 .js-toDoForm {
   margin: 10px 0;
   padding-top: 10px;
+  padding-bottom: 30px;
 }
 
 form input::placeholder {
@@ -94,12 +104,23 @@ form input::placeholder {
 
 .js-toDoList {
   flex-direction: column;
-  padding-top: 30px;
-  padding-left: 0px;
-  align-items: left;
-  margin-left: 45%;
-  margin-right: 45%;
-  width: 20%;
+  padding-left: 0;
+  align-items: center;
+  height: 150px;
+  overflow: auto;
+}
+
+.things {
+  padding: 0 50px 10px 50px;
+}
+
+.js-toDoList::-webkit-scrollbar {
+  width: 5px;
+}
+
+.js-toDoList::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
 }
 
 button {
@@ -116,14 +137,13 @@ button {
 .js-goodwords {
   opacity: 0;
   margin: 0px;
-  padding: 20px 10px;
+  padding: 30px;
   background-color: rgba(0, 0, 0, 0.4);
   font-size: 14px;
   font-style: italic;
   line-height: 30px;
   letter-spacing: 5px;
   word-break: keep-all;
-  width: 35%;
   text-align: center;
   animation: fadeIn 1s linear forwards;
 }
@@ -172,11 +192,6 @@ button {
 }
 
 @media screen and (max-width: 1280px) {
-  .js-toDoList {
-    margin-left: 42%;
-    margin-right: 42%;
-    width: 25%;
-  }
   .goodwords-container {
     margin-top: 40px;
   }
@@ -189,11 +204,6 @@ button {
 }
 
 @media screen and (max-width: 960px) {
-  .js-toDoList {
-    margin-left: 40%;
-    margin-right: 40%;
-    width: 20%;
-  }
   .goodwords-container {
     margin-top: 25px;
   }

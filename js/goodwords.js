@@ -1,4 +1,4 @@
-const TODOS_FORWORDS = localStorage.getItem(toDos);
+const TODOS_FORWORDS = localStorage.getItem("toDos");
 const container = document.querySelector(".goodwords-container")
 const words = document.querySelector(".js-goodwords")
 
@@ -25,22 +25,12 @@ const GOOD_WORDS = [
 
 const WORDS_NUMBERS = GOOD_WORDS.length;
 
-function paintWord(wordNumber){
-    if (TODOS_FORWORDS === null ) {
-        container.classList.add(SHOWING_CN)
-        words.innerText = GOOD_WORDS[wordNumber];
-    }
+const goodWords = function paintWord(){
+    const randomNumber = Math.floor(Math.random() * WORDS_NUMBERS);
+    if (toDoList.innerText === "") {
+        container.classList.add(SHOWING_CN);
+        words.innerText = GOOD_WORDS[randomNumber];
+    } 
 }
 
-function genRandom(){
-    const number = Math.floor(Math.random() * WORDS_NUMBERS);
-    return number;
-}
-
-function init(){
-    const randomNumber = genRandom();
-    paintWord(randomNumber);
-}
-
-init();
-
+goodWords()

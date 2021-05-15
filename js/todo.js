@@ -9,13 +9,17 @@ let toDos = [];
 function deleteToDo(event) {
     const btn = event.target;
     const li = btn.parentNode;
-    container.classList.add(SHOWING_CN);
     toDoList.removeChild(li);
     const cleanToDos = toDos.filter(function(toDo){
         return toDo.id !== parseInt(li.id);
     });
     toDos = cleanToDos;
     saveToDos();
+    const randomNumber = Math.floor(Math.random() * WORDS_NUMBERS);
+    if (toDoList.innerText === "") {
+        container.classList.add(SHOWING_CN);
+        words.innerText = GOOD_WORDS[randomNumber];
+    } 
 }
 
 function saveToDos(){
@@ -32,6 +36,7 @@ function paintToDo(text){
     span.innerText = text;
     li.appendChild(delBtn);
     li.appendChild(span);
+    li.className = "things"; 
     li.id = newId;
     toDoList.appendChild(li);
     const toDoObj = {
