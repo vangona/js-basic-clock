@@ -1,6 +1,7 @@
 const TODOS_FORWORDS = localStorage.getItem("toDos");
 const container = document.querySelector(".goodwords-container")
 const words = document.querySelector(".js-goodwords")
+const bgImage = document.querySelector(".bgImage")
 
 const GOOD_WORDS = [
     "사람들은 삶의 의무 또는 \n현재의 불행과 따분함에서 벗어나고자 \n갖가지 핑계를 대며 대중운동에 휩쓸린다. \n- 에릭 호퍼", 
@@ -25,7 +26,7 @@ const GOOD_WORDS = [
 
 const WORDS_NUMBERS = GOOD_WORDS.length;
 
-const goodWords = function paintWord(){
+function paintWord(){
     const randomNumber = Math.floor(Math.random() * WORDS_NUMBERS);
     if (toDoList.innerText === "") {
         container.classList.add(SHOWING_CN);
@@ -33,4 +34,9 @@ const goodWords = function paintWord(){
     } 
 }
 
-goodWords()
+
+function init (){
+    bgImage.onload = paintWord();
+}
+
+init();
