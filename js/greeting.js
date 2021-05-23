@@ -1,10 +1,16 @@
 const form = document.querySelector(".js-form"),
     input = form.querySelector("input"),
-    greeting = document.querySelector(".js-greetings")
+    greeting = document.querySelector(".js-greetings");
 
 const USER_LS = "currentUser",
     SHOWING_CN = "showing"
     
+function deleteName() {
+    localStorage.removeItem(USER_LS)
+    form.classList.add(SHOWING_CN);
+    greeting.classList.remove(SHOWING_CN);
+}
+
 function saveName(text){
     localStorage.setItem(USER_LS, text)
 }
@@ -14,6 +20,7 @@ function handleSubmit(event) {
     const currentValue = input.value;
     paintGreeting(currentValue);
     saveName(currentValue);
+    input.value = "";
 }
 
 function askForName(){
@@ -24,7 +31,10 @@ function askForName(){
 function paintGreeting(text){
     form.classList.remove(SHOWING_CN);
     greeting.classList.add(SHOWING_CN);
-    greeting.innerText = `행복한 하루 되세요. ${text}.`;
+    greeting.innerHTML = 
+    `행복한 하루 되세요. <a class="deleteBtn__name">${text}</a>.`;
+    const deleteBtnName = document.querySelector(".deleteBtn__name")
+    deleteBtnName.addEventListener("click", deleteName)
 }
 
 function loadName(){

@@ -85,6 +85,14 @@ form input::placeholder {
   letter-spacing: 10px;
 }
 
+.deleteBtn__name {
+  padding-left: 0.5rem;
+}
+
+.deleteBtn__name:hover {
+  cursor: pointer;
+}
+
 .js-form input {
   width: 140px;
 }
