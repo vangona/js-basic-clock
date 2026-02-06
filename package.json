@@ -1,0 +1,8 @@
+{
+  "name": "js-basic-clock",
+  "version": "1.0.0",
+  "description": "Basic clock app with background images and quotes",
+  "scripts": {
+    "build-images": "node scripts/build-images.js"
+  }
+}

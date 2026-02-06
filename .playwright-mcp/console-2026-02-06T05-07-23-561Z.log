@@ -1,0 +1,3 @@
+[      78ms] TypeError: Cannot set properties of null (setting 'onload')
+    at init (http://localhost:8080/js/goodwords.js:53:20)
+    at http://localhost:8080/js/goodwords.js:56:1

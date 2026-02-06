@@ -138,22 +138,78 @@ button {
   color: white;
 }
 
-.goodwords-container {
-  margin-top: 50px;
+/* 컨텐츠 박스 (명언 + 할일 통합) */
+.content-box {
+  position: relative;
+  margin-top: 30px;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.35);
+  border-radius: 8px;
+  min-width: 280px;
+  max-width: 400px;
+  animation: fadeIn 1s linear;
 }
 
-.js-goodwords {
-  opacity: 0;
-  margin: 0px;
-  padding: 30px;
-  background-color: rgba(0, 0, 0, 0.4);
+/* 모드 전환 버튼 */
+.mode-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.mode-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+.mode-btn:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.mode-icon {
   font-size: 14px;
+  opacity: 0.7;
+}
+
+/* 모드 패널 */
+.mode-panel {
+  display: none;
+}
+
+.mode-panel.showing {
+  display: block;
+}
+
+/* 명언 스타일 */
+.mode-words .js-goodwords {
+  margin: 0;
+  padding: 10px 20px;
+  font-size: 13px;
   font-style: italic;
-  line-height: 30px;
-  letter-spacing: 5px;
+  line-height: 26px;
+  letter-spacing: 3px;
   word-break: keep-all;
   text-align: center;
-  animation: fadeIn 1s linear forwards;
+  opacity: 1;
+}
+
+/* 할일 폼 스타일 */
+.todo-form {
+  margin-bottom: 15px;
+}
+
+.todo-form input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
 @keyframes fadeIn {
@@ -186,6 +242,22 @@ button {
   object-fit: cover;
 }
 
+/* 세로 화면에서 가로 이미지 패닝 애니메이션 */
+@keyframes panLeftToRight {
+  0% {
+    object-position: left center;
+  }
+  100% {
+    object-position: right center;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  .bgImage--panning {
+    animation: fadeIn 1s linear, panLeftToRight 30s ease-in-out infinite alternate;
+  }
+}
+
 .js-weather {
   font-size: 20px;
   position: absolute;
@@ -194,30 +266,30 @@ button {
 }
 
 @media screen and (max-height: 767px) {
-  .goodwords-container {
-    margin-top: 20px;
+  .content-box {
+    margin-top: 15px;
+    padding: 20px;
   }
 }
 
 @media screen and (max-width: 1280px) {
-  .goodwords-container {
-    margin-top: 40px;
+  .content-box {
+    margin-top: 25px;
   }
-  .js-goodwords {
-    margin-bottom: 0px;
+  .mode-words .js-goodwords {
     font-size: 12px;
-    width: 50%;
-    height: auto;
   }
 }
 
 @media screen and (max-width: 960px) {
-  .goodwords-container {
-    margin-top: 25px;
+  .content-box {
+    margin-top: 20px;
+    min-width: 250px;
   }
-  .js-goodwords {
+  .mode-words .js-goodwords {
     font-size: 11px;
-    width: 70%;
+    letter-spacing: 2px;
+    line-height: 22px;
   }
 }
 
@@ -248,4 +320,229 @@ button {
     top: 10px;
     right: 20px;
   }
+}
+
+/* Todo 완료 스타일 */
+.todo-item--completed .todo-text {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+/* Todo 항목 레이아웃 */
+.things {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 체크박스 스타일 - 투명 배경 + 윤곽선 */
+.todo-checkbox {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid rgba(255, 255, 255, 0.7);
+  border-radius: 3px;
+  background: transparent;
+  cursor: pointer;
+  position: relative;
+  transition: border-color 0.2s;
+}
+
+.todo-checkbox:hover {
+  border-color: rgba(255, 255, 255, 1);
+}
+
+.todo-checkbox:checked {
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.todo-checkbox:checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 12px;
+  color: white;
+}
+
+.todo-label {
+  display: flex;
+  align-items: center;
+}
+
+.todo-text {
+  flex: 1;
+}
+
+/* 삭제 버튼 */
+.btn-delete {
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  margin-left: auto;
+}
+
+.btn-delete:hover {
+  opacity: 1;
+}
+
+/* 복원 버튼 */
+.btn-restore {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  margin-left: auto;
+  font-size: 14px;
+}
+
+.btn-restore:hover {
+  opacity: 1;
+}
+
+/* 드래그앤드롭 스타일 */
+.things[draggable="true"] {
+  cursor: grab;
+}
+
+.things[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.things.dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+.things.drag-over {
+  border-top: 2px solid rgba(255, 255, 255, 0.8);
+  padding-top: 8px;
+}
+
+/* 아카이브 메뉴 */
+.archive-menu {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 100;
+}
+
+/* 햄버거 버튼 */
+.archive-toggle {
+  width: 20px;
+  height: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.archive-toggle span {
+  display: block;
+  width: 100%;
+  height: 2px;
+  background-color: rgba(255, 255, 255, 0.7);
+  border-radius: 1px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.archive-toggle.active span:nth-child(1) {
+  transform: rotate(45deg) translate(4px, 4px);
+}
+
+.archive-toggle.active span:nth-child(2) {
+  opacity: 0;
+}
+
+.archive-toggle.active span:nth-child(3) {
+  transform: rotate(-45deg) translate(4px, -4px);
+}
+
+/* 아카이브 패널 */
+.archive-panel {
+  position: absolute;
+  top: 40px;
+  left: 0;
+  width: 280px;
+  max-height: 300px;
+  background-color: rgba(0, 0, 0, 0.85);
+  border-radius: 10px;
+  padding: 15px;
+  display: none;
+  flex-direction: column;
+  animation: fadeIn 0.3s ease;
+}
+
+.archive-panel.showing {
+  display: flex;
+}
+
+.archive-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.archive-header h4 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.archive-action-btn {
+  font-size: 11px;
+  padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.archive-action-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* 아카이브 리스트 */
+.archive-list {
+  flex-direction: column;
+  padding-left: 0;
+  margin: 0;
+  max-height: 180px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.archive-list .things {
+  opacity: 0.7;
+  font-size: 0.85em;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.archive-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.archive-list::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.archive-empty {
+  font-size: 12px;
+  opacity: 0.5;
+  text-align: center;
+  margin: 10px 0;
+  display: none;
+}
+
+.archive-empty.showing {
+  display: block;
 }
