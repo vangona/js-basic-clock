@@ -186,6 +186,22 @@ button {
   object-fit: cover;
 }
 
+/* 세로 화면에서 가로 이미지 패닝 애니메이션 */
+@keyframes panLeftToRight {
+  0% {
+    object-position: left center;
+  }
+  100% {
+    object-position: right center;
+  }
+}
+
+@media screen and (orientation: portrait) {
+  .bgImage--panning {
+    animation: fadeIn 1s linear, panLeftToRight 30s ease-in-out infinite alternate;
+  }
+}
+
 .js-weather {
   font-size: 20px;
   position: absolute;
