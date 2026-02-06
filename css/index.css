@@ -113,7 +113,8 @@ form input::placeholder {
 .js-toDoList {
   flex-direction: column;
   padding-left: 0;
-  height: 150px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 
@@ -147,8 +148,10 @@ button {
   min-width: 280px;
   min-height: 150px;
   resize: both;
-  overflow: auto;
+  overflow: hidden;
   animation: fadeIn 1s linear;
+  display: flex;
+  flex-direction: column;
 }
 
 .content-box::-webkit-resizer {
@@ -191,10 +194,18 @@ button {
 }
 
 .mode-panel.showing {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 /* 명언 스타일 */
+.mode-words {
+  justify-content: center;
+  align-items: center;
+}
+
 .mode-words .js-goodwords {
   margin: 0;
   padding: 10px 20px;
