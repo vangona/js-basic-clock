@@ -1,10 +1,8 @@
 const body = document.querySelector("body")
 
-const IMG_NUMBER = 24;
-
-function paintImage(imgNumber){
+function paintImage(imagePath) {
     const image = new Image();
-    image.src = `./images/${imgNumber + 5}.jpg`;
+    image.src = imagePath;
     image.classList.add("bgImage");
 
     image.onload = function() {
@@ -21,15 +19,19 @@ function paintImage(imgNumber){
     body.prepend(image);
 }
 
-function genRandom(){
-    const number = Math.floor(Math.random() * IMG_NUMBER);
-    return number;
-}
+async function init() {
+    try {
+        const response = await fetch('./images.json');
+        const data = await response.json();
+        const images = data.images;
 
-function init(){
-    const randomNumber = genRandom();
-    paintImage(randomNumber);
+        if (images.length > 0) {
+            const randomIndex = Math.floor(Math.random() * images.length);
+            paintImage(images[randomIndex]);
+        }
+    } catch (error) {
+        console.error('이미지 목록을 불러올 수 없습니다:', error);
+    }
 }
 
 init();
-
