@@ -2,18 +2,19 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     toDoInput = toDoForm.querySelector("input"),
     toDoList = document.querySelector(".js-toDoList"),
     archiveList = document.querySelector(".js-archiveList"),
-    archiveCompletedBtn = document.querySelector(".js-archiveCompleted"),
     archiveToggleBtn = document.querySelector(".js-archiveToggle"),
     archivePanel = document.querySelector(".js-archivePanel"),
     archiveEmpty = document.querySelector(".js-archiveEmpty"),
     modeBtn = document.querySelector(".js-modeBtn"),
     modeIcon = document.querySelector(".js-modeIcon"),
     modeWords = document.querySelector(".js-modeWords"),
-    modeTodos = document.querySelector(".js-modeTodos");
+    modeTodos = document.querySelector(".js-modeTodos"),
+    contentBox = document.querySelector(".js-contentBox");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
 const MODE_LS = "viewMode";
+const BOX_SIZE_LS = "contentBoxSize";
 
 let toDos = [];
 let archivedToDos = [];
@@ -75,16 +76,33 @@ function restoreFromArchive(event) {
     }
 }
 
-// 완료 토글
+// 완료 → 즉시 아카이브
 function toggleComplete(event) {
     const checkbox = event.target;
     const li = checkbox.closest("li");
     const toDoItem = toDos.find(toDo => toDo.id === li.id);
 
-    if (toDoItem) {
-        toDoItem.completed = checkbox.checked;
-        li.classList.toggle("todo-item--completed", toDoItem.completed);
+    if (toDoItem && checkbox.checked) {
+        // 활성 목록에서 제거
+        toDos = toDos.filter(toDo => toDo.id !== li.id);
+        toDoList.removeChild(li);
+
+        // 아카이브로 이동
+        toDoItem.completed = true;
+        toDoItem.archivedAt = Date.now();
+        archivedToDos.push(toDoItem);
+
         saveToDos();
+        saveArchive();
+        renderArchive();
+
+        // 햄버거 버튼 흔들림으로 아카이브 알림
+        archiveToggleBtn.classList.remove("shake");
+        void archiveToggleBtn.offsetWidth;
+        archiveToggleBtn.classList.add("shake");
+        archiveToggleBtn.addEventListener("animationend", function() {
+            archiveToggleBtn.classList.remove("shake");
+        }, { once: true });
     }
 }
 
@@ -160,8 +178,7 @@ function paintToDo(toDoObj, isArchived = false) {
         checkbox.checked = toDoObj.completed;
         checkbox.addEventListener("change", toggleComplete);
 
-        // 라벨
-        label.htmlFor = "check-" + toDoObj.id;
+        // 라벨 (checkbox가 label 내부에 있으므로 htmlFor 불필요)
         label.className = "todo-label";
 
         // 삭제 버튼
@@ -238,33 +255,6 @@ function clearArchiveList() {
     }
 }
 
-// 완료된 항목 아카이브
-function archiveCompleted() {
-    const completedToDos = toDos.filter(toDo => toDo.completed);
-
-    if (completedToDos.length === 0) return;
-
-    // 완료된 항목을 아카이브로 이동
-    completedToDos.forEach(toDo => {
-        toDo.archivedAt = Date.now();
-        archivedToDos.push(toDo);
-    });
-
-    // 활성 목록에서 제거
-    toDos = toDos.filter(toDo => !toDo.completed);
-
-    // DOM 업데이트
-    document.querySelectorAll(".todo-item--completed").forEach(li => {
-        if (li.parentNode === toDoList) {
-            toDoList.removeChild(li);
-        }
-    });
-
-    saveToDos();
-    saveArchive();
-    renderArchive();
-}
-
 // 아카이브 렌더링
 function renderArchive() {
     clearArchiveList();
@@ -325,11 +315,46 @@ function loadToDos() {
     }
 }
 
+// 컨텐츠 박스 크기 저장/복원
+function loadBoxSize() {
+    const saved = localStorage.getItem(BOX_SIZE_LS);
+    if (saved) {
+        const { width, height } = JSON.parse(saved);
+        contentBox.style.width = width + "px";
+        contentBox.style.height = height + "px";
+    }
+}
+
+function initBoxResize() {
+    let resizeTimer;
+    const observer = new ResizeObserver(function(entries) {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(function() {
+            const { width, height } = entries[0].contentRect;
+            localStorage.setItem(BOX_SIZE_LS, JSON.stringify({ width, height }));
+        }, 300);
+    });
+    observer.observe(contentBox);
+}
+
+// 아카이브 패널 외부 클릭 시 닫기
+function initArchiveOutsideClick() {
+    document.addEventListener("click", function(event) {
+        const isInsideArchive = event.target.closest(".archive-menu");
+        if (!isInsideArchive && archivePanel.classList.contains("showing")) {
+            archivePanel.classList.remove("showing");
+            archiveToggleBtn.classList.remove("active");
+        }
+    });
+}
+
 function init() {
     loadToDos();
     loadMode();
+    loadBoxSize();
+    initBoxResize();
+    initArchiveOutsideClick();
     toDoForm.addEventListener("submit", handleSubmit);
-    archiveCompletedBtn.addEventListener("click", archiveCompleted);
     archiveToggleBtn.addEventListener("click", toggleArchivePanel);
     modeBtn.addEventListener("click", toggleMode);
 }
