@@ -560,6 +560,18 @@ button {
   font-size: 0.85em;
   padding: 8px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: opacity 0.2s;
+}
+
+.archive-list .things:hover {
+  opacity: 1;
+}
+
+.archive-list .things:hover .todo-text,
+.archive-list .things:hover .archive-date,
+.archive-list .things:hover .archive-description {
+  color: white;
+  opacity: 1;
 }
 
 .archive-list::-webkit-scrollbar {
@@ -581,4 +593,91 @@ button {
 
 .archive-empty.showing {
   display: block;
+}
+
+/* 아카이브 날짜 & 설명 */
+.archive-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 2px;
+}
+
+.archive-info .todo-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archive-date {
+  font-size: 0.7em;
+  opacity: 0.5;
+  letter-spacing: 0.5px;
+}
+
+.archive-description {
+  font-size: 0.75em;
+  opacity: 0.4;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 할일 설명 textarea */
+.todo-description {
+  width: 100%;
+  box-sizing: border-box;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  font-family: "Nanum Myeongjo", serif;
+  font-size: 0.85em;
+  padding: 6px 4px;
+  margin-top: 4px;
+  resize: none;
+  outline: none;
+  opacity: 0.8;
+}
+
+.todo-description::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+.todo-description:focus {
+  border-bottom-color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+.todo-description::-webkit-scrollbar {
+  width: 4px;
+}
+
+.todo-description::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.todo-description::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* 설명 있음 인디케이터 */
+.todo-desc-indicator {
+  font-size: 0.7em;
+  opacity: 0.4;
+  flex-shrink: 0;
+  letter-spacing: 2px;
+}
+
+/* 설명이 있는 할일 항목 - flex-wrap */
+.things:has(.todo-description) {
+  flex-wrap: wrap;
+}
+
+.things .todo-description {
+  flex-basis: 100%;
 }

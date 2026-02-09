@@ -155,6 +155,67 @@ function handleDrop(event) {
     document.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
 }
 
+// 날짜 포맷 헬퍼
+function formatDate(timestamp) {
+    if (!timestamp) return "";
+    const d = new Date(timestamp);
+    return (d.getMonth() + 1).toString().padStart(2, "0") + "." + d.getDate().toString().padStart(2, "0");
+}
+
+function getDaysDiff(from, to) {
+    if (!from || !to) return null;
+    const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24));
+    return diff;
+}
+
+// 설명 토글
+function toggleDescription(event) {
+    const span = event.target;
+    const li = span.closest("li");
+    const existing = li.querySelector(".todo-description");
+
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    const toDoItem = toDos.find(toDo => toDo.id === li.id);
+    if (!toDoItem) return;
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "todo-description";
+    textarea.placeholder = "설명을 입력하세요...";
+    textarea.value = toDoItem.description || "";
+    textarea.rows = 2;
+
+    textarea.addEventListener("blur", function() {
+        toDoItem.description = textarea.value;
+        saveToDos();
+        // 인디케이터 업데이트
+        const indicator = li.querySelector(".todo-desc-indicator");
+        if (textarea.value) {
+            if (!indicator) {
+                const ind = document.createElement("span");
+                ind.className = "todo-desc-indicator";
+                ind.textContent = "...";
+                span.after(ind);
+            }
+        } else {
+            if (indicator) indicator.remove();
+        }
+    });
+
+    textarea.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+            textarea.blur();
+            existing && existing.remove();
+        }
+    });
+
+    li.appendChild(textarea);
+    textarea.focus();
+}
+
 // 할 일 항목 렌더링
 function paintToDo(toDoObj, isArchived = false) {
     const li = document.createElement("li");
@@ -187,10 +248,23 @@ function paintToDo(toDoObj, isArchived = false) {
         deleteBtn.title = "삭제";
         deleteBtn.addEventListener("click", deleteToDo);
 
-        // 순서: 체크박스 → 텍스트 → 삭제버튼
+        // 텍스트 클릭 시 설명 토글
+        span.addEventListener("click", toggleDescription);
+        span.style.cursor = "pointer";
+
+        // 순서: 체크박스 → 텍스트 → 설명 인디케이터 → 삭제버튼
         label.appendChild(checkbox);
         li.appendChild(label);
         li.appendChild(span);
+
+        // 설명이 있으면 인디케이터 표시
+        if (toDoObj.description) {
+            const indicator = document.createElement("span");
+            indicator.className = "todo-desc-indicator";
+            indicator.textContent = "...";
+            li.appendChild(indicator);
+        }
+
         li.appendChild(deleteBtn);
 
         // 완료 상태 반영
@@ -206,7 +280,7 @@ function paintToDo(toDoObj, isArchived = false) {
         li.addEventListener("drop", handleDrop);
         toDoList.appendChild(li);
     } else {
-        // 아카이브용 UI (부활 버튼 + 삭제 버튼)
+        // 아카이브용 UI (날짜 + 부활 버튼 + 삭제 버튼)
         const restoreBtn = document.createElement("button");
         const deleteBtn = document.createElement("button");
 
@@ -220,7 +294,43 @@ function paintToDo(toDoObj, isArchived = false) {
         deleteBtn.title = "완전 삭제";
         deleteBtn.addEventListener("click", deleteToDo);
 
-        li.appendChild(span);
+        // 텍스트 + 날짜 wrapper
+        const infoWrapper = document.createElement("div");
+        infoWrapper.className = "archive-info";
+        infoWrapper.appendChild(span);
+
+        // 날짜 표시
+        if (toDoObj.createdAt || toDoObj.archivedAt) {
+            const dateSpan = document.createElement("span");
+            dateSpan.className = "archive-date";
+            const created = formatDate(toDoObj.createdAt);
+            const archived = formatDate(toDoObj.archivedAt);
+            const days = getDaysDiff(toDoObj.createdAt, toDoObj.archivedAt);
+
+            let dateText = "";
+            if (created && archived) {
+                dateText = created + " → " + archived;
+                if (days !== null) {
+                    dateText += days === 0 ? " (당일)" : " (" + days + "일)";
+                }
+            } else if (archived) {
+                dateText = "완료: " + archived;
+            } else if (created) {
+                dateText = "추가: " + created;
+            }
+            dateSpan.textContent = dateText;
+            infoWrapper.appendChild(dateSpan);
+        }
+
+        // 아카이브에서 설명이 있으면 읽기 전용 표시
+        if (toDoObj.description) {
+            const descSpan = document.createElement("span");
+            descSpan.className = "archive-description";
+            descSpan.textContent = toDoObj.description;
+            infoWrapper.appendChild(descSpan);
+        }
+
+        li.appendChild(infoWrapper);
         li.appendChild(restoreBtn);
         li.appendChild(deleteBtn);
         li.classList.add("todo-item--completed");
