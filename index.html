@@ -46,12 +46,44 @@
       <div class="archive-panel js-archivePanel">
         <div class="archive-header">
           <h4>아카이브</h4>
+          <button class="js-archiveDetail archive-detail-btn" title="상세 보기">상세</button>
         </div>
         <ul class="js-archiveList archive-list"></ul>
         <p class="archive-empty js-archiveEmpty">보관된 항목이 없습니다</p>
       </div>
     </div>
     <span class="js-weather"></span>
+
+    <!-- 아카이브 상세 모달 -->
+    <div class="archive-modal-overlay js-archiveModal">
+      <div class="archive-modal">
+        <div class="archive-modal-header">
+          <h3>아카이브</h3>
+          <button class="js-archiveModalClose archive-modal-close">&times;</button>
+        </div>
+        <div class="archive-modal-tabs">
+          <button class="archive-tab active js-tabTimeline">타임라인</button>
+          <button class="archive-tab js-tabCalendar">캘린더</button>
+        </div>
+        <div class="archive-modal-body">
+          <!-- 타임라인 뷰 -->
+          <div class="archive-view archive-timeline js-archiveTimeline"></div>
+          <!-- 캘린더 뷰 -->
+          <div class="archive-view archive-calendar js-archiveCalendar" style="display:none">
+            <div class="calendar-nav">
+              <button class="js-calPrev calendar-nav-btn">&lsaquo;</button>
+              <span class="js-calTitle calendar-title"></span>
+              <button class="js-calNext calendar-nav-btn">&rsaquo;</button>
+            </div>
+            <div class="calendar-weekdays">
+              <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+            </div>
+            <div class="calendar-grid js-calGrid"></div>
+            <div class="calendar-day-items js-calDayItems"></div>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script src="./js/clock.js"></script>
     <script src="./js/greeting.js"></script>

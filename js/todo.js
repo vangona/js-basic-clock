@@ -9,7 +9,19 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     modeIcon = document.querySelector(".js-modeIcon"),
     modeWords = document.querySelector(".js-modeWords"),
     modeTodos = document.querySelector(".js-modeTodos"),
-    contentBox = document.querySelector(".js-contentBox");
+    contentBox = document.querySelector(".js-contentBox"),
+    archiveDetailBtn = document.querySelector(".js-archiveDetail"),
+    archiveModal = document.querySelector(".js-archiveModal"),
+    archiveModalClose = document.querySelector(".js-archiveModalClose"),
+    tabTimeline = document.querySelector(".js-tabTimeline"),
+    tabCalendar = document.querySelector(".js-tabCalendar"),
+    archiveTimelineView = document.querySelector(".js-archiveTimeline"),
+    archiveCalendarView = document.querySelector(".js-archiveCalendar"),
+    calGrid = document.querySelector(".js-calGrid"),
+    calTitle = document.querySelector(".js-calTitle"),
+    calPrev = document.querySelector(".js-calPrev"),
+    calNext = document.querySelector(".js-calNext"),
+    calDayItems = document.querySelector(".js-calDayItems");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
@@ -155,6 +167,67 @@ function handleDrop(event) {
     document.querySelectorAll(".drag-over").forEach(el => el.classList.remove("drag-over"));
 }
 
+// 날짜 포맷 헬퍼
+function formatDate(timestamp) {
+    if (!timestamp) return "";
+    const d = new Date(timestamp);
+    return (d.getMonth() + 1).toString().padStart(2, "0") + "." + d.getDate().toString().padStart(2, "0");
+}
+
+function getDaysDiff(from, to) {
+    if (!from || !to) return null;
+    const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24));
+    return diff;
+}
+
+// 설명 토글
+function toggleDescription(event) {
+    const span = event.target;
+    const li = span.closest("li");
+    const existing = li.querySelector(".todo-description");
+
+    if (existing) {
+        existing.remove();
+        return;
+    }
+
+    const toDoItem = toDos.find(toDo => toDo.id === li.id);
+    if (!toDoItem) return;
+
+    const textarea = document.createElement("textarea");
+    textarea.className = "todo-description";
+    textarea.placeholder = "설명을 입력하세요...";
+    textarea.value = toDoItem.description || "";
+    textarea.rows = 2;
+
+    textarea.addEventListener("blur", function() {
+        toDoItem.description = textarea.value;
+        saveToDos();
+        // 인디케이터 업데이트
+        const indicator = li.querySelector(".todo-desc-indicator");
+        if (textarea.value) {
+            if (!indicator) {
+                const ind = document.createElement("span");
+                ind.className = "todo-desc-indicator";
+                ind.textContent = "...";
+                span.after(ind);
+            }
+        } else {
+            if (indicator) indicator.remove();
+        }
+    });
+
+    textarea.addEventListener("keydown", function(e) {
+        if (e.key === "Escape") {
+            textarea.blur();
+            existing && existing.remove();
+        }
+    });
+
+    li.appendChild(textarea);
+    textarea.focus();
+}
+
 // 할 일 항목 렌더링
 function paintToDo(toDoObj, isArchived = false) {
     const li = document.createElement("li");
@@ -187,10 +260,23 @@ function paintToDo(toDoObj, isArchived = false) {
         deleteBtn.title = "삭제";
         deleteBtn.addEventListener("click", deleteToDo);
 
-        // 순서: 체크박스 → 텍스트 → 삭제버튼
+        // 텍스트 클릭 시 설명 토글
+        span.addEventListener("click", toggleDescription);
+        span.style.cursor = "pointer";
+
+        // 순서: 체크박스 → 텍스트 → 설명 인디케이터 → 삭제버튼
         label.appendChild(checkbox);
         li.appendChild(label);
         li.appendChild(span);
+
+        // 설명이 있으면 인디케이터 표시
+        if (toDoObj.description) {
+            const indicator = document.createElement("span");
+            indicator.className = "todo-desc-indicator";
+            indicator.textContent = "...";
+            li.appendChild(indicator);
+        }
+
         li.appendChild(deleteBtn);
 
         // 완료 상태 반영
@@ -206,7 +292,7 @@ function paintToDo(toDoObj, isArchived = false) {
         li.addEventListener("drop", handleDrop);
         toDoList.appendChild(li);
     } else {
-        // 아카이브용 UI (부활 버튼 + 삭제 버튼)
+        // 아카이브용 UI (날짜 + 부활 버튼 + 삭제 버튼)
         const restoreBtn = document.createElement("button");
         const deleteBtn = document.createElement("button");
 
@@ -220,7 +306,43 @@ function paintToDo(toDoObj, isArchived = false) {
         deleteBtn.title = "완전 삭제";
         deleteBtn.addEventListener("click", deleteToDo);
 
-        li.appendChild(span);
+        // 텍스트 + 날짜 wrapper
+        const infoWrapper = document.createElement("div");
+        infoWrapper.className = "archive-info";
+        infoWrapper.appendChild(span);
+
+        // 날짜 표시
+        if (toDoObj.createdAt || toDoObj.archivedAt) {
+            const dateSpan = document.createElement("span");
+            dateSpan.className = "archive-date";
+            const created = formatDate(toDoObj.createdAt);
+            const archived = formatDate(toDoObj.archivedAt);
+            const days = getDaysDiff(toDoObj.createdAt, toDoObj.archivedAt);
+
+            let dateText = "";
+            if (created && archived) {
+                dateText = created + " → " + archived;
+                if (days !== null) {
+                    dateText += days === 0 ? " (당일)" : " (" + days + "일)";
+                }
+            } else if (archived) {
+                dateText = "완료: " + archived;
+            } else if (created) {
+                dateText = "추가: " + created;
+            }
+            dateSpan.textContent = dateText;
+            infoWrapper.appendChild(dateSpan);
+        }
+
+        // 아카이브에서 설명이 있으면 읽기 전용 표시
+        if (toDoObj.description) {
+            const descSpan = document.createElement("span");
+            descSpan.className = "archive-description";
+            descSpan.textContent = toDoObj.description;
+            infoWrapper.appendChild(descSpan);
+        }
+
+        li.appendChild(infoWrapper);
         li.appendChild(restoreBtn);
         li.appendChild(deleteBtn);
         li.classList.add("todo-item--completed");
@@ -348,6 +470,223 @@ function initArchiveOutsideClick() {
     });
 }
 
+// ===== 아카이브 상세 모달 =====
+let calendarDate = new Date();
+
+function openArchiveModal() {
+    archivePanel.classList.remove("showing");
+    archiveToggleBtn.classList.remove("active");
+    archiveModal.classList.add("showing");
+    renderTimeline();
+}
+
+function closeArchiveModal() {
+    archiveModal.classList.remove("showing");
+}
+
+function switchTab(tab) {
+    if (tab === "timeline") {
+        tabTimeline.classList.add("active");
+        tabCalendar.classList.remove("active");
+        archiveTimelineView.style.display = "";
+        archiveCalendarView.style.display = "none";
+        renderTimeline();
+    } else {
+        tabCalendar.classList.add("active");
+        tabTimeline.classList.remove("active");
+        archiveCalendarView.style.display = "";
+        archiveTimelineView.style.display = "none";
+        renderCalendar();
+    }
+}
+
+// 타임라인 뷰
+function renderTimeline() {
+    archiveTimelineView.innerHTML = "";
+
+    if (archivedToDos.length === 0) {
+        archiveTimelineView.innerHTML = '<p class="timeline-empty">보관된 항목이 없습니다</p>';
+        return;
+    }
+
+    // 날짜별 그룹핑 (archivedAt 기준, 최신순)
+    const groups = {};
+    archivedToDos.forEach(function(item) {
+        const dateKey = item.archivedAt ? new Date(item.archivedAt).toLocaleDateString("ko-KR") : "날짜 없음";
+        if (!groups[dateKey]) groups[dateKey] = [];
+        groups[dateKey].push(item);
+    });
+
+    // 최신순 정렬
+    const sortedKeys = Object.keys(groups).sort(function(a, b) {
+        if (a === "날짜 없음") return 1;
+        if (b === "날짜 없음") return -1;
+        const da = groups[a][0].archivedAt || 0;
+        const db = groups[b][0].archivedAt || 0;
+        return db - da;
+    });
+
+    sortedKeys.forEach(function(dateKey) {
+        const section = document.createElement("div");
+        section.className = "timeline-section";
+
+        const header = document.createElement("div");
+        header.className = "timeline-date-header";
+        header.textContent = dateKey;
+        section.appendChild(header);
+
+        groups[dateKey].forEach(function(item) {
+            const card = document.createElement("div");
+            card.className = "timeline-card";
+
+            const title = document.createElement("div");
+            title.className = "timeline-card-title";
+            title.textContent = item.text;
+            card.appendChild(title);
+
+            // 기간 정보
+            if (item.createdAt || item.archivedAt) {
+                const meta = document.createElement("div");
+                meta.className = "timeline-card-meta";
+                const created = formatDate(item.createdAt);
+                const archived = formatDate(item.archivedAt);
+                const days = getDaysDiff(item.createdAt, item.archivedAt);
+                let metaText = "";
+                if (created && archived) {
+                    metaText = created + " → " + archived;
+                    if (days !== null) metaText += days === 0 ? " (당일)" : " (" + days + "일)";
+                } else if (created) {
+                    metaText = "추가: " + created;
+                }
+                meta.textContent = metaText;
+                card.appendChild(meta);
+            }
+
+            // 설명
+            if (item.description) {
+                const desc = document.createElement("div");
+                desc.className = "timeline-card-desc";
+                desc.textContent = item.description;
+                card.appendChild(desc);
+            }
+
+            section.appendChild(card);
+        });
+
+        archiveTimelineView.appendChild(section);
+    });
+}
+
+// 캘린더 뷰
+function renderCalendar() {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    calTitle.textContent = year + "년 " + (month + 1) + "월";
+
+    // 해당 월의 아카이브 날짜 맵 생성
+    const archiveDays = {};
+    archivedToDos.forEach(function(item) {
+        if (!item.archivedAt) return;
+        const d = new Date(item.archivedAt);
+        if (d.getFullYear() === year && d.getMonth() === month) {
+            const day = d.getDate();
+            if (!archiveDays[day]) archiveDays[day] = [];
+            archiveDays[day].push(item);
+        }
+    });
+
+    // 달력 그리드
+    calGrid.innerHTML = "";
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+
+    // 빈 셀 (첫째 주 앞)
+    for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        empty.className = "calendar-cell empty";
+        calGrid.appendChild(empty);
+    }
+
+    // 날짜 셀
+    for (let d = 1; d <= daysInMonth; d++) {
+        const cell = document.createElement("div");
+        cell.className = "calendar-cell";
+        cell.textContent = d;
+
+        if (archiveDays[d]) {
+            cell.classList.add("has-items");
+            const dot = document.createElement("span");
+            dot.className = "calendar-dot";
+            cell.appendChild(dot);
+        }
+
+        if (year === today.getFullYear() && month === today.getMonth() && d === today.getDate()) {
+            cell.classList.add("today");
+        }
+
+        cell.addEventListener("click", function() {
+            // 선택 상태 토글
+            calGrid.querySelectorAll(".selected").forEach(function(el) { el.classList.remove("selected"); });
+            cell.classList.add("selected");
+            renderCalendarDayItems(year, month, d);
+        });
+
+        calGrid.appendChild(cell);
+    }
+
+    calDayItems.innerHTML = "";
+}
+
+function renderCalendarDayItems(year, month, day) {
+    calDayItems.innerHTML = "";
+
+    const items = archivedToDos.filter(function(item) {
+        if (!item.archivedAt) return false;
+        const d = new Date(item.archivedAt);
+        return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+    });
+
+    if (items.length === 0) {
+        calDayItems.innerHTML = '<p class="cal-day-empty">이 날 완료한 항목이 없습니다</p>';
+        return;
+    }
+
+    const header = document.createElement("div");
+    header.className = "cal-day-header";
+    header.textContent = (month + 1) + "월 " + day + "일 (" + items.length + "건)";
+    calDayItems.appendChild(header);
+
+    items.forEach(function(item) {
+        const card = document.createElement("div");
+        card.className = "timeline-card";
+
+        const title = document.createElement("div");
+        title.className = "timeline-card-title";
+        title.textContent = item.text;
+        card.appendChild(title);
+
+        if (item.createdAt) {
+            const meta = document.createElement("div");
+            meta.className = "timeline-card-meta";
+            const days = getDaysDiff(item.createdAt, item.archivedAt);
+            let metaText = "추가: " + formatDate(item.createdAt);
+            if (days !== null) metaText += days === 0 ? " (당일 완료)" : " (" + days + "일 소요)";
+            meta.textContent = metaText;
+            card.appendChild(meta);
+        }
+
+        if (item.description) {
+            const desc = document.createElement("div");
+            desc.className = "timeline-card-desc";
+            desc.textContent = item.description;
+            card.appendChild(desc);
+        }
+
+        calDayItems.appendChild(card);
+    });
+}
+
 function init() {
     loadToDos();
     loadMode();
@@ -357,6 +696,23 @@ function init() {
     toDoForm.addEventListener("submit", handleSubmit);
     archiveToggleBtn.addEventListener("click", toggleArchivePanel);
     modeBtn.addEventListener("click", toggleMode);
+
+    // 아카이브 모달 이벤트
+    archiveDetailBtn.addEventListener("click", openArchiveModal);
+    archiveModalClose.addEventListener("click", closeArchiveModal);
+    archiveModal.addEventListener("click", function(e) {
+        if (e.target === archiveModal) closeArchiveModal();
+    });
+    tabTimeline.addEventListener("click", function() { switchTab("timeline"); });
+    tabCalendar.addEventListener("click", function() { switchTab("calendar"); });
+    calPrev.addEventListener("click", function() {
+        calendarDate.setMonth(calendarDate.getMonth() - 1);
+        renderCalendar();
+    });
+    calNext.addEventListener("click", function() {
+        calendarDate.setMonth(calendarDate.getMonth() + 1);
+        renderCalendar();
+    });
 }
 
 init();
