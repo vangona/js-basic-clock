@@ -720,7 +720,7 @@ button {
 .archive-modal {
   background: rgba(20, 20, 20, 0.95);
   border-radius: 14px;
-  width: 400px;
+  width: 560px;
   max-width: 90vw;
   max-height: 80vh;
   display: flex;
@@ -786,6 +786,38 @@ button {
 .archive-tab.active {
   color: white;
   border-bottom-color: rgba(255, 255, 255, 0.7);
+}
+
+/* 날짜 기준 토글 */
+.archive-date-toggle {
+  margin-left: auto;
+  display: flex;
+  gap: 2px;
+  align-self: center;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.date-toggle-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: "Nanum Myeongjo", serif;
+  font-size: 11px;
+  padding: 4px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.date-toggle-btn:hover {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.date-toggle-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
 }
 
 /* 모달 본문 */

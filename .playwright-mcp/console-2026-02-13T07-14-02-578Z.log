@@ -1,0 +1,4 @@
+[     400ms] TypeError: Cannot set properties of null (setting 'onload')
+    at init (http://localhost:8767/js/goodwords.js:53:20)
+    at http://localhost:8767/js/goodwords.js:56:1
+[     450ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:8767/favicon.ico:0
