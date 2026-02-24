@@ -21,7 +21,9 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     calTitle = document.querySelector(".js-calTitle"),
     calPrev = document.querySelector(".js-calPrev"),
     calNext = document.querySelector(".js-calNext"),
-    calDayItems = document.querySelector(".js-calDayItems");
+    calDayItems = document.querySelector(".js-calDayItems"),
+    dateByCreatedBtn = document.querySelector(".js-dateByCreated"),
+    dateByArchivedBtn = document.querySelector(".js-dateByArchived");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
@@ -229,7 +231,7 @@ function toggleDescription(event) {
 }
 
 // 할 일 항목 렌더링
-function paintToDo(toDoObj, isArchived = false) {
+function paintToDo(toDoObj, isArchived = false, prepend = false) {
     const li = document.createElement("li");
     const span = document.createElement("span");
     span.innerText = toDoObj.text;
@@ -290,7 +292,11 @@ function paintToDo(toDoObj, isArchived = false) {
         li.addEventListener("dragend", handleDragEnd);
         li.addEventListener("dragover", handleDragOver);
         li.addEventListener("drop", handleDrop);
-        toDoList.appendChild(li);
+        if (prepend && toDoList.firstChild) {
+            toDoList.insertBefore(li, toDoList.firstChild);
+        } else {
+            toDoList.appendChild(li);
+        }
     } else {
         // 아카이브용 UI (날짜 + 부활 버튼 + 삭제 버튼)
         const restoreBtn = document.createElement("button");
@@ -364,8 +370,8 @@ function handleSubmit(event) {
         createdAt: Date.now()
     };
 
-    toDos.push(toDoObj);
-    paintToDo(toDoObj);
+    toDos.unshift(toDoObj);
+    paintToDo(toDoObj, false, true);
     saveToDos();
     toDoInput.value = "";
 }
@@ -472,6 +478,33 @@ function initArchiveOutsideClick() {
 
 // ===== 아카이브 상세 모달 =====
 let calendarDate = new Date();
+let dateMode = "createdAt"; // "createdAt" or "archivedAt"
+
+function getDateKey(item) {
+    const ts = item[dateMode];
+    return ts ? new Date(ts).toLocaleDateString("ko-KR") : "날짜 없음";
+}
+
+function getTimestamp(item) {
+    return item[dateMode] || 0;
+}
+
+function switchDateMode(mode) {
+    dateMode = mode;
+    if (mode === "createdAt") {
+        dateByCreatedBtn.classList.add("active");
+        dateByArchivedBtn.classList.remove("active");
+    } else {
+        dateByArchivedBtn.classList.add("active");
+        dateByCreatedBtn.classList.remove("active");
+    }
+    // 현재 활성 탭 다시 렌더링
+    if (tabTimeline.classList.contains("active")) {
+        renderTimeline();
+    } else {
+        renderCalendar();
+    }
+}
 
 function openArchiveModal() {
     archivePanel.classList.remove("showing");
@@ -509,10 +542,10 @@ function renderTimeline() {
         return;
     }
 
-    // 날짜별 그룹핑 (archivedAt 기준, 최신순)
+    // 날짜별 그룹핑 (dateMode 기준, 최신순)
     const groups = {};
     archivedToDos.forEach(function(item) {
-        const dateKey = item.archivedAt ? new Date(item.archivedAt).toLocaleDateString("ko-KR") : "날짜 없음";
+        const dateKey = getDateKey(item);
         if (!groups[dateKey]) groups[dateKey] = [];
         groups[dateKey].push(item);
     });
@@ -521,8 +554,8 @@ function renderTimeline() {
     const sortedKeys = Object.keys(groups).sort(function(a, b) {
         if (a === "날짜 없음") return 1;
         if (b === "날짜 없음") return -1;
-        const da = groups[a][0].archivedAt || 0;
-        const db = groups[b][0].archivedAt || 0;
+        const da = getTimestamp(groups[a][0]);
+        const db = getTimestamp(groups[b][0]);
         return db - da;
     });
 
@@ -583,11 +616,12 @@ function renderCalendar() {
     const month = calendarDate.getMonth();
     calTitle.textContent = year + "년 " + (month + 1) + "월";
 
-    // 해당 월의 아카이브 날짜 맵 생성
+    // 해당 월의 아카이브 날짜 맵 생성 (dateMode 기준)
     const archiveDays = {};
     archivedToDos.forEach(function(item) {
-        if (!item.archivedAt) return;
-        const d = new Date(item.archivedAt);
+        const ts = item[dateMode];
+        if (!ts) return;
+        const d = new Date(ts);
         if (d.getFullYear() === year && d.getMonth() === month) {
             const day = d.getDate();
             if (!archiveDays[day]) archiveDays[day] = [];
@@ -642,13 +676,14 @@ function renderCalendarDayItems(year, month, day) {
     calDayItems.innerHTML = "";
 
     const items = archivedToDos.filter(function(item) {
-        if (!item.archivedAt) return false;
-        const d = new Date(item.archivedAt);
+        const ts = item[dateMode];
+        if (!ts) return false;
+        const d = new Date(ts);
         return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
     });
 
     if (items.length === 0) {
-        calDayItems.innerHTML = '<p class="cal-day-empty">이 날 완료한 항목이 없습니다</p>';
+        calDayItems.innerHTML = '<p class="cal-day-empty">이 날의 항목이 없습니다</p>';
         return;
     }
 
@@ -713,6 +748,8 @@ function init() {
         calendarDate.setMonth(calendarDate.getMonth() + 1);
         renderCalendar();
     });
+    dateByCreatedBtn.addEventListener("click", function() { switchDateMode("createdAt"); });
+    dateByArchivedBtn.addEventListener("click", function() { switchDateMode("archivedAt"); });
 }
 
 init();
