@@ -3,6 +3,12 @@
   "version": "1.0.0",
   "description": "Basic clock app with background images and quotes",
   "scripts": {
-    "build-images": "node scripts/build-images.js"
-  }
+    "build-images": "node scripts/build-images.js",
+    "deploy": "gh-pages -d .",
+    "predeploy": "npm run build-images"
+  },
+  "dependencies": {
+    "gh-pages": "^6.3.0"
+  },
+  "homepage": "https://github.com/vangona/js-basic-clock"
 }
