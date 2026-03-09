@@ -665,6 +665,20 @@ button {
   background: transparent;
 }
 
+/* 할일 텍스트 인라인 수정 */
+.todo-edit-input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  color: white;
+  font-family: "Nanum Myeongjo", serif;
+  font-size: inherit;
+  padding: 2px 0;
+  outline: none;
+}
+
 /* 설명 있음 인디케이터 */
 .todo-desc-indicator {
   font-size: 0.7em;

@@ -182,6 +182,42 @@ function getDaysDiff(from, to) {
     return diff;
 }
 
+// 할일 텍스트 인라인 수정
+function editToDoText(event) {
+    const span = event.target;
+    const li = span.closest("li");
+    const toDoItem = toDos.find(toDo => toDo.id === li.id);
+    if (!toDoItem) return;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "todo-edit-input";
+    input.value = toDoItem.text;
+
+    function finishEdit() {
+        const newText = input.value.trim();
+        if (newText && newText !== toDoItem.text) {
+            toDoItem.text = newText;
+            span.innerText = newText;
+            saveToDos();
+        }
+        input.replaceWith(span);
+    }
+
+    input.addEventListener("blur", finishEdit);
+    input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") input.blur();
+        if (e.key === "Escape") {
+            input.removeEventListener("blur", finishEdit);
+            input.replaceWith(span);
+        }
+    });
+
+    span.replaceWith(input);
+    input.focus();
+    input.select();
+}
+
 // 설명 토글
 function toggleDescription(event) {
     const span = event.target;
@@ -262,7 +298,8 @@ function paintToDo(toDoObj, isArchived = false, prepend = false) {
         deleteBtn.title = "삭제";
         deleteBtn.addEventListener("click", deleteToDo);
 
-        // 텍스트 클릭 시 설명 토글
+        // 텍스트 더블클릭 시 수정, 단일클릭 시 설명 토글
+        span.addEventListener("dblclick", editToDoText);
         span.addEventListener("click", toggleDescription);
         span.style.cursor = "pointer";
 
