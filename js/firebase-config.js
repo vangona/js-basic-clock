@@ -21,7 +21,7 @@ import {
     getFirestore, doc, setDoc, getDoc, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {
-    getAuth, signInWithRedirect, getRedirectResult, GoogleAuthProvider, onAuthStateChanged, signOut
+    getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -167,11 +167,6 @@ if (!firebaseConfig.apiKey) {
         }
     });
 
-    // 리다이렉트 로그인 결과 처리 (페이지 복귀 시)
-    getRedirectResult(auth).catch(function (e) {
-        console.error("[Firebase] 리다이렉트 결과 처리 실패:", e);
-    });
-
     // 동기화 버튼 클릭 핸들러
     var syncBtn = document.querySelector(".js-syncBtn");
     if (syncBtn) {
@@ -181,8 +176,10 @@ if (!firebaseConfig.apiKey) {
                     console.error("[Firebase] 로그아웃 실패:", e);
                 });
             } else {
-                signInWithRedirect(auth, provider).catch(function (e) {
-                    console.error("[Firebase] 로그인 실패:", e);
+                signInWithPopup(auth, provider).catch(function (e) {
+                    if (e.code !== "auth/popup-closed-by-user") {
+                        console.error("[Firebase] 로그인 실패:", e);
+                    }
                 });
             }
         });
