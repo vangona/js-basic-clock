@@ -9,10 +9,14 @@ function deleteName() {
     localStorage.removeItem(USER_LS)
     form.classList.add(SHOWING_CN);
     greeting.classList.remove(SHOWING_CN);
+    // Firebase 로그인 상태면 로그아웃
+    if (window.firebaseSignOut) {
+        window.firebaseSignOut();
+    }
 }
 
 function saveName(text){
-    localStorage.setItem(USER_LS, text)
+    AppStorage.set(USER_LS, text)
 }
 
 function handleSubmit(event) {
@@ -38,13 +42,21 @@ function paintGreeting(text){
 }
 
 function loadName(){
-    const currentUser = localStorage.getItem(USER_LS);
+    const currentUser = AppStorage.get(USER_LS);
     if(currentUser === null){
         askForName();
     } else {
         paintGreeting(currentUser);
     }
 }
+
+// Firebase Auth 로그인 시 호출됨 (firebase-config.js에서)
+window.onFirebaseUser = function(user) {
+    if (user && user.displayName) {
+        paintGreeting(user.displayName);
+        saveName(user.displayName);
+    }
+};
 
 function init() {
     loadName();

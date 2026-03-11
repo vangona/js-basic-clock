@@ -39,13 +39,13 @@ function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
 }
 
-// localStorage 저장
+// 데이터 저장 (localStorage + Firestore 동기화)
 function saveToDos() {
-    localStorage.setItem(TODOS_LS, JSON.stringify(toDos));
+    AppStorage.set(TODOS_LS, JSON.stringify(toDos));
 }
 
 function saveArchive() {
-    localStorage.setItem(ARCHIVE_LS, JSON.stringify(archivedToDos));
+    AppStorage.set(ARCHIVE_LS, JSON.stringify(archivedToDos));
 }
 
 // 할 일 삭제
@@ -444,19 +444,19 @@ function toggleMode() {
         modeWords.classList.remove("showing");
         modeTodos.classList.add("showing");
         modeIcon.textContent = "✦";
-        localStorage.setItem(MODE_LS, "todos");
+        AppStorage.set(MODE_LS, "todos");
     } else {
         // 명언 모드로 전환
         modeTodos.classList.remove("showing");
         modeWords.classList.add("showing");
         modeIcon.textContent = "☰";
-        localStorage.setItem(MODE_LS, "words");
+        AppStorage.set(MODE_LS, "words");
     }
 }
 
 // 저장된 모드 로드
 function loadMode() {
-    const savedMode = localStorage.getItem(MODE_LS);
+    const savedMode = AppStorage.get(MODE_LS);
     if (savedMode === "todos") {
         modeWords.classList.remove("showing");
         modeTodos.classList.add("showing");
@@ -466,8 +466,8 @@ function loadMode() {
 
 // 초기 로드
 function loadToDos() {
-    const loadedToDos = localStorage.getItem(TODOS_LS);
-    const loadedArchive = localStorage.getItem(ARCHIVE_LS);
+    const loadedToDos = AppStorage.get(TODOS_LS);
+    const loadedArchive = AppStorage.get(ARCHIVE_LS);
 
     if (loadedToDos !== null) {
         toDos = JSON.parse(loadedToDos);
@@ -787,6 +787,21 @@ function init() {
     });
     dateByCreatedBtn.addEventListener("click", function() { switchDateMode("createdAt"); });
     dateByArchivedBtn.addEventListener("click", function() { switchDateMode("archivedAt"); });
+
+    // 다른 기기에서 데이터 변경 시 UI 전체 갱신
+    AppStorage.onRemoteChange(function() {
+        // 할일 목록 다시 그리기
+        toDoList.innerHTML = "";
+        toDos = JSON.parse(AppStorage.get(TODOS_LS) || "[]");
+        toDos.forEach(function(toDo) { paintToDo(toDo); });
+
+        // 아카이브 다시 그리기
+        archivedToDos = JSON.parse(AppStorage.get(ARCHIVE_LS) || "[]");
+        renderArchive();
+
+        // 모드 다시 로드
+        loadMode();
+    });
 }
 
 init();

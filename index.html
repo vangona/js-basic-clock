@@ -54,6 +54,11 @@
     </div>
     <span class="js-weather"></span>
 
+    <!-- 동기화 버튼 (좌측 하단) -->
+    <div class="sync-status">
+      <button class="js-syncBtn sync-btn" title="Google 로그인으로 동기화">☁</button>
+    </div>
+
     <!-- 아카이브 상세 모달 -->
     <div class="archive-modal-overlay js-archiveModal">
       <div class="archive-modal">
@@ -89,11 +94,13 @@
       </div>
     </div>
 
+    <script src="./js/storage.js"></script>
     <script src="./js/clock.js"></script>
     <script src="./js/greeting.js"></script>
     <script src="./js/todo.js"></script>
     <script src="./js/bg.js"></script>
     <script src="./js/goodwords.js"></script>
     <script src="./js/weather.js"></script>
+    <script type="module" src="./js/firebase-config.js"></script>
   </body>
 </html>
