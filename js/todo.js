@@ -23,7 +23,10 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     calNext = document.querySelector(".js-calNext"),
     calDayItems = document.querySelector(".js-calDayItems"),
     dateByCreatedBtn = document.querySelector(".js-dateByCreated"),
-    dateByArchivedBtn = document.querySelector(".js-dateByArchived");
+    dateByArchivedBtn = document.querySelector(".js-dateByArchived"),
+    modeMatrix = document.querySelector(".js-modeMatrix"),
+    matrixCells = document.querySelectorAll(".js-matrixCell"),
+    matrixLists = document.querySelectorAll(".js-matrixList");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
@@ -435,32 +438,43 @@ function toggleArchivePanel() {
     archiveToggleBtn.classList.toggle("active");
 }
 
-// 모드 전환 (명언 ↔ 할일)
-function toggleMode() {
-    const isWordsMode = modeWords.classList.contains("showing");
+// 모드 전환 (명언 → 할일 → 매트릭스 → 명언)
+function setMode(mode) {
+    modeWords.classList.remove("showing");
+    modeTodos.classList.remove("showing");
+    modeMatrix.classList.remove("showing");
 
-    if (isWordsMode) {
-        // 할일 모드로 전환
-        modeWords.classList.remove("showing");
+    if (mode === "todos") {
         modeTodos.classList.add("showing");
         modeIcon.textContent = "✦";
-        AppStorage.set(MODE_LS, "todos");
+    } else if (mode === "matrix") {
+        modeMatrix.classList.add("showing");
+        modeIcon.textContent = "⊞";
+        renderMatrix();
     } else {
-        // 명언 모드로 전환
-        modeTodos.classList.remove("showing");
         modeWords.classList.add("showing");
         modeIcon.textContent = "☰";
-        AppStorage.set(MODE_LS, "words");
+        mode = "words";
+    }
+
+    AppStorage.set(MODE_LS, mode);
+}
+
+function toggleMode() {
+    if (modeWords.classList.contains("showing")) {
+        setMode("todos");
+    } else if (modeTodos.classList.contains("showing")) {
+        setMode("matrix");
+    } else {
+        setMode("words");
     }
 }
 
 // 저장된 모드 로드
 function loadMode() {
     const savedMode = AppStorage.get(MODE_LS);
-    if (savedMode === "todos") {
-        modeWords.classList.remove("showing");
-        modeTodos.classList.add("showing");
-        modeIcon.textContent = "✦";
+    if (savedMode === "todos" || savedMode === "matrix") {
+        setMode(savedMode);
     }
 }
 
@@ -759,6 +773,161 @@ function renderCalendarDayItems(year, month, day) {
     });
 }
 
+// ===== 아이젠하워 매트릭스 =====
+
+// todo의 urgent/important 값으로 사분면 결정
+function getQuadrant(todo) {
+    if (todo.urgent == null && todo.important == null) return "backlog";
+    if (todo.urgent && todo.important) return "q1";
+    if (!todo.urgent && todo.important) return "q2";
+    if (todo.urgent && !todo.important) return "q3";
+    return "q4"; // urgent=false, important=false
+}
+
+// 사분면에 따라 urgent/important 값 설정
+function setQuadrantProps(todo, quadrant) {
+    if (quadrant === "backlog") {
+        delete todo.urgent;
+        delete todo.important;
+    } else if (quadrant === "q1") {
+        todo.urgent = true;
+        todo.important = true;
+    } else if (quadrant === "q2") {
+        todo.urgent = false;
+        todo.important = true;
+    } else if (quadrant === "q3") {
+        todo.urgent = true;
+        todo.important = false;
+    } else if (quadrant === "q4") {
+        todo.urgent = false;
+        todo.important = false;
+    }
+}
+
+// 매트릭스 항목 체크 (완료 → 아카이브)
+function completeFromMatrix(event) {
+    const checkbox = event.target;
+    const li = checkbox.closest("li");
+    const toDoItem = toDos.find(toDo => toDo.id === li.id);
+
+    if (toDoItem && checkbox.checked) {
+        toDos = toDos.filter(toDo => toDo.id !== li.id);
+        li.remove();
+
+        toDoItem.completed = true;
+        toDoItem.archivedAt = Date.now();
+        archivedToDos.push(toDoItem);
+
+        saveToDos();
+        saveArchive();
+        renderArchive();
+
+        // 일반 뷰의 DOM도 갱신
+        const normalLi = toDoList.querySelector("#" + CSS.escape(toDoItem.id));
+        if (normalLi) normalLi.remove();
+
+        archiveToggleBtn.classList.remove("shake");
+        void archiveToggleBtn.offsetWidth;
+        archiveToggleBtn.classList.add("shake");
+        archiveToggleBtn.addEventListener("animationend", function() {
+            archiveToggleBtn.classList.remove("shake");
+        }, { once: true });
+    }
+}
+
+// 매트릭스 항목 렌더링 (컴팩트)
+function paintMatrixItem(toDoObj, targetList) {
+    const li = document.createElement("li");
+    li.className = "things matrix-item";
+    li.id = toDoObj.id;
+    li.draggable = true;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "todo-checkbox";
+    checkbox.addEventListener("change", completeFromMatrix);
+
+    const span = document.createElement("span");
+    span.className = "todo-text";
+    span.innerText = toDoObj.text;
+
+    const label = document.createElement("label");
+    label.className = "todo-label";
+    label.appendChild(checkbox);
+
+    li.appendChild(label);
+    li.appendChild(span);
+
+    // 매트릭스 드래그 이벤트
+    li.addEventListener("dragstart", function(e) {
+        draggedItem = li;
+        li.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", toDoObj.id);
+    });
+    li.addEventListener("dragend", function() {
+        li.classList.remove("dragging");
+        matrixCells.forEach(function(cell) { cell.classList.remove("drag-over"); });
+        draggedItem = null;
+    });
+
+    targetList.appendChild(li);
+}
+
+// 매트릭스 렌더링
+function renderMatrix() {
+    // 모든 매트릭스 리스트 비우기
+    matrixLists.forEach(function(list) { list.innerHTML = ""; });
+
+    // 할일을 사분면별로 분류하여 렌더링
+    toDos.forEach(function(todo) {
+        const quadrant = getQuadrant(todo);
+        const targetList = modeMatrix.querySelector('.js-matrixList[data-quadrant="' + quadrant + '"]');
+        if (targetList) {
+            paintMatrixItem(todo, targetList);
+        }
+    });
+}
+
+// 매트릭스 셀 드래그앤드롭 (사분면 간 이동)
+function initMatrixDragDrop() {
+    matrixCells.forEach(function(cell) {
+        cell.addEventListener("dragover", function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            cell.classList.add("drag-over");
+        });
+
+        cell.addEventListener("dragleave", function(e) {
+            // 자식으로 이동할 때 dragleave 무시
+            if (!cell.contains(e.relatedTarget)) {
+                cell.classList.remove("drag-over");
+            }
+        });
+
+        cell.addEventListener("drop", function(e) {
+            e.preventDefault();
+            cell.classList.remove("drag-over");
+
+            const todoId = e.dataTransfer.getData("text/plain");
+            if (!todoId) return;
+
+            const targetQuadrant = cell.dataset.quadrant;
+            if (!targetQuadrant) return;
+
+            const toDoItem = toDos.find(function(t) { return t.id === todoId; });
+            if (!toDoItem) return;
+
+            const currentQuadrant = getQuadrant(toDoItem);
+            if (currentQuadrant === targetQuadrant) return;
+
+            setQuadrantProps(toDoItem, targetQuadrant);
+            saveToDos();
+            renderMatrix();
+        });
+    });
+}
+
 function init() {
     loadToDos();
     loadMode();
@@ -768,6 +937,7 @@ function init() {
     toDoForm.addEventListener("submit", handleSubmit);
     archiveToggleBtn.addEventListener("click", toggleArchivePanel);
     modeBtn.addEventListener("click", toggleMode);
+    initMatrixDragDrop();
 
     // 아카이브 모달 이벤트
     archiveDetailBtn.addEventListener("click", openArchiveModal);
@@ -798,6 +968,11 @@ function init() {
         // 아카이브 다시 그리기
         archivedToDos = JSON.parse(AppStorage.get(ARCHIVE_LS) || "[]");
         renderArchive();
+
+        // 매트릭스 모드면 다시 렌더링
+        if (modeMatrix.classList.contains("showing")) {
+            renderMatrix();
+        }
 
         // 모드 다시 로드
         loadMode();

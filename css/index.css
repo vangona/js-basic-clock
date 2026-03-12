@@ -1041,9 +1041,132 @@ button {
   border-color: rgba(255, 255, 255, 0.5);
 }
 
+/* ===== 아이젠하워 매트릭스 ===== */
+.matrix-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: 1;
+  min-height: 0;
+}
+
+.matrix-cell {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 8px;
+  min-height: 80px;
+  overflow-y: auto;
+  transition: background-color 0.2s;
+}
+
+.matrix-cell::-webkit-scrollbar {
+  width: 3px;
+}
+
+.matrix-cell::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* 사분면 색상 (좌측 테두리) */
+.matrix-q1 { border-left: 3px solid rgba(255, 80, 80, 0.6); }
+.matrix-q2 { border-left: 3px solid rgba(80, 150, 255, 0.6); }
+.matrix-q3 { border-left: 3px solid rgba(255, 200, 50, 0.6); }
+.matrix-q4 { border-left: 3px solid rgba(150, 150, 150, 0.4); }
+
+.matrix-label {
+  font-size: 10px;
+  opacity: 0.5;
+  margin-bottom: 6px;
+  letter-spacing: 1px;
+}
+
+.matrix-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* 매트릭스 항목 (컴팩트) */
+.matrix-item {
+  padding: 4px 6px !important;
+  font-size: 12px;
+  gap: 6px !important;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.matrix-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.matrix-item .todo-checkbox {
+  width: 13px;
+  height: 13px;
+}
+
+.matrix-item .todo-checkbox:checked::after {
+  font-size: 10px;
+}
+
+.matrix-item .todo-text {
+  font-size: 12px;
+}
+
+/* 백로그 영역 */
+.matrix-backlog {
+  margin-top: 8px;
+  padding: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  min-height: 30px;
+  transition: background-color 0.2s;
+  border-radius: 4px;
+}
+
+.matrix-backlog-label {
+  font-size: 10px;
+  opacity: 0.4;
+  margin-bottom: 4px;
+  letter-spacing: 1px;
+}
+
+/* 드래그 오버 하이라이트 */
+.matrix-cell.drag-over,
+.matrix-backlog.drag-over {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* 동기화 라벨 */
+.sync-label {
+  display: block;
+  font-size: 9px;
+  opacity: 0.45;
+  text-align: center;
+  margin-top: 3px;
+  letter-spacing: 0.5px;
+}
+
+/* ===== 반응형 ===== */
 @media screen and (max-width: 480px) {
   .archive-modal {
     width: 95vw;
     max-height: 85vh;
+  }
+
+  .matrix-cell {
+    min-height: 60px;
+    padding: 6px;
+  }
+
+  .matrix-item {
+    font-size: 11px;
+  }
+
+  .matrix-item .todo-text {
+    font-size: 11px;
+  }
+
+  .matrix-label {
+    font-size: 9px;
   }
 }

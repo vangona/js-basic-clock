@@ -128,6 +128,8 @@ if (!firebaseConfig.apiKey) {
     onAuthStateChanged(auth, function (user) {
         var syncBtn = document.querySelector(".js-syncBtn");
 
+        var syncLabel = document.querySelector(".js-syncLabel");
+
         if (user) {
             currentUserId = user.uid;
             window.AppStorage._setSyncFn(syncToFirestore);
@@ -141,6 +143,11 @@ if (!firebaseConfig.apiKey) {
             if (syncBtn) {
                 syncBtn.classList.add("connected");
                 syncBtn.title = user.displayName + " (동기화 중)";
+            }
+
+            // 로그인 라벨 표시
+            if (syncLabel) {
+                syncLabel.textContent = user.displayName || user.email || "";
             }
 
             // 데이터 병합 후 실시간 리스너 시작
@@ -159,6 +166,10 @@ if (!firebaseConfig.apiKey) {
             if (syncBtn) {
                 syncBtn.classList.remove("connected");
                 syncBtn.title = "Google 로그인으로 동기화";
+            }
+
+            if (syncLabel) {
+                syncLabel.textContent = "";
             }
 
             if (window.onFirebaseUser) {

@@ -34,6 +34,32 @@
         </form>
         <ul class="js-toDoList"></ul>
       </div>
+
+      <!-- 매트릭스 모드 -->
+      <div class="mode-panel mode-matrix js-modeMatrix">
+        <div class="matrix-grid">
+          <div class="matrix-cell matrix-q1 js-matrixCell" data-quadrant="q1">
+            <div class="matrix-label">긴급 + 중요</div>
+            <ul class="matrix-list js-matrixList" data-quadrant="q1"></ul>
+          </div>
+          <div class="matrix-cell matrix-q3 js-matrixCell" data-quadrant="q3">
+            <div class="matrix-label">긴급</div>
+            <ul class="matrix-list js-matrixList" data-quadrant="q3"></ul>
+          </div>
+          <div class="matrix-cell matrix-q2 js-matrixCell" data-quadrant="q2">
+            <div class="matrix-label">중요</div>
+            <ul class="matrix-list js-matrixList" data-quadrant="q2"></ul>
+          </div>
+          <div class="matrix-cell matrix-q4 js-matrixCell" data-quadrant="q4">
+            <div class="matrix-label">제거하기</div>
+            <ul class="matrix-list js-matrixList" data-quadrant="q4"></ul>
+          </div>
+        </div>
+        <div class="matrix-backlog js-matrixCell" data-quadrant="backlog">
+          <div class="matrix-backlog-label">백로그</div>
+          <ul class="matrix-list js-matrixList" data-quadrant="backlog"></ul>
+        </div>
+      </div>
     </div>
 
     <!-- 아카이브 햄버거 메뉴 (좌측 상단) -->
@@ -57,6 +83,7 @@
     <!-- 동기화 버튼 (좌측 하단) -->
     <div class="sync-status">
       <button class="js-syncBtn sync-btn" title="Google 로그인으로 동기화">☁</button>
+      <span class="js-syncLabel sync-label"></span>
     </div>
 
     <!-- 아카이브 상세 모달 -->
