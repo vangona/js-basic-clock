@@ -26,7 +26,10 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     dateByArchivedBtn = document.querySelector(".js-dateByArchived"),
     modeMatrix = document.querySelector(".js-modeMatrix"),
     matrixCells = document.querySelectorAll(".js-matrixCell"),
-    matrixLists = document.querySelectorAll(".js-matrixList");
+    matrixLists = document.querySelectorAll(".js-matrixList"),
+    todoNavBar = document.querySelector(".js-todoNavBar"),
+    todoNavBack = document.querySelector(".js-todoNavBack"),
+    todoNavTitle = document.querySelector(".js-todoNavTitle");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
@@ -36,10 +39,50 @@ const BOX_SIZE_LS = "contentBoxSize";
 let toDos = [];
 let archivedToDos = [];
 let draggedItem = null;
+let currentParentId = null;
 
 // UUID 생성 함수
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// 하위 할일 헬퍼
+function getChildCount(parentId) {
+    return toDos.filter(function(t) { return t.parentId === parentId; }).length;
+}
+
+function getVisibleToDos() {
+    if (currentParentId === null) {
+        return toDos.filter(function(t) { return !t.parentId; });
+    }
+    return toDos.filter(function(t) { return t.parentId === currentParentId; });
+}
+
+// 드릴다운 네비게이션
+function navigateInto(parentId) {
+    currentParentId = parentId;
+    renderCurrentView();
+}
+
+function navigateBack() {
+    currentParentId = null;
+    renderCurrentView();
+}
+
+function renderCurrentView() {
+    toDoList.innerHTML = "";
+    var visible = getVisibleToDos();
+    visible.forEach(function(toDo) { paintToDo(toDo); });
+
+    if (currentParentId) {
+        var parent = toDos.find(function(t) { return t.id === currentParentId; });
+        todoNavTitle.textContent = parent ? parent.text : "";
+        todoNavBar.style.display = "";
+        toDoInput.placeholder = "하위 할일 추가...";
+    } else {
+        todoNavBar.style.display = "none";
+        toDoInput.placeholder = "해야 할 일이 있나요?";
+    }
 }
 
 // 데이터 저장 (localStorage + Firestore 동기화)
@@ -61,10 +104,20 @@ function deleteToDo(event) {
 
     // 활성 목록에서 삭제인지 아카이브에서 삭제인지 확인
     if (parentList === toDoList) {
-        toDos = toDos.filter(toDo => toDo.id !== li.id);
+        // 하위 할일도 함께 삭제
+        toDos = toDos.filter(function(toDo) {
+            return toDo.id !== li.id && toDo.parentId !== li.id;
+        });
         saveToDos();
+        // 삭제된 항목이 현재 보고 있는 부모면 뒤로가기
+        if (currentParentId === li.id) {
+            navigateBack();
+        }
     } else {
-        archivedToDos = archivedToDos.filter(toDo => toDo.id !== li.id);
+        // 아카이브에서 삭제: 하위 할일도 함께 삭제
+        archivedToDos = archivedToDos.filter(function(toDo) {
+            return toDo.id !== li.id && toDo.parentId !== li.id;
+        });
         saveArchive();
         archiveEmpty.classList.toggle("showing", archivedToDos.length === 0);
     }
@@ -85,10 +138,24 @@ function restoreFromArchive(event) {
         toDoItem.completed = false;
         delete toDoItem.archivedAt;
         toDos.push(toDoItem);
-        paintToDo(toDoItem);
+
+        // 하위 할일도 함께 복원
+        var children = archivedToDos.filter(function(t) { return t.parentId === toDoItem.id; });
+        children.forEach(function(child) {
+            child.completed = false;
+            delete child.archivedAt;
+            toDos.push(child);
+        });
+        archivedToDos = archivedToDos.filter(function(t) { return t.parentId !== toDoItem.id; });
+
+        // 현재 뷰가 최상위이고 복원 항목이 최상위면 paint
+        if (!currentParentId && !toDoItem.parentId) {
+            paintToDo(toDoItem);
+        }
 
         saveToDos();
         saveArchive();
+        renderArchive();
         archiveEmpty.classList.toggle("showing", archivedToDos.length === 0);
     }
 }
@@ -100,8 +167,18 @@ function toggleComplete(event) {
     const toDoItem = toDos.find(toDo => toDo.id === li.id);
 
     if (toDoItem && checkbox.checked) {
-        // 활성 목록에서 제거
-        toDos = toDos.filter(toDo => toDo.id !== li.id);
+        // 하위 할일도 함께 아카이브
+        var children = toDos.filter(function(t) { return t.parentId === toDoItem.id; });
+        children.forEach(function(child) {
+            child.completed = true;
+            child.archivedAt = Date.now();
+            archivedToDos.push(child);
+        });
+
+        // 활성 목록에서 제거 (본인 + 하위)
+        toDos = toDos.filter(function(toDo) {
+            return toDo.id !== li.id && toDo.parentId !== toDoItem.id;
+        });
         toDoList.removeChild(li);
 
         // 아카이브로 이동
@@ -112,6 +189,11 @@ function toggleComplete(event) {
         saveToDos();
         saveArchive();
         renderArchive();
+
+        // 하위 뷰에서 부모가 완료되면 뒤로가기
+        if (currentParentId === toDoItem.id) {
+            navigateBack();
+        }
 
         // 햄버거 버튼 흔들림으로 아카이브 알림
         archiveToggleBtn.classList.remove("shake");
@@ -163,9 +245,13 @@ function handleDrop(event) {
             li.parentNode.insertBefore(draggedItem, li);
         }
 
-        // 배열 순서 변경
+        // 배열 순서 변경 (현재 뷰 레벨 내에서만)
         const newOrder = [...toDoList.children].map(child => child.id);
-        toDos.sort((a, b) => newOrder.indexOf(a.id) - newOrder.indexOf(b.id));
+        const visibleIds = new Set(newOrder);
+        const visibleItems = toDos.filter(function(t) { return visibleIds.has(t.id); });
+        const otherItems = toDos.filter(function(t) { return !visibleIds.has(t.id); });
+        visibleItems.sort(function(a, b) { return newOrder.indexOf(a.id) - newOrder.indexOf(b.id); });
+        toDos = visibleItems.concat(otherItems);
         saveToDos();
     }
 
@@ -321,6 +407,20 @@ function paintToDo(toDoObj, isArchived = false, prepend = false) {
 
         li.appendChild(deleteBtn);
 
+        // 하위 할일 진입 버튼 (최상위 할일만, 하위 할일에는 표시 안함)
+        if (!toDoObj.parentId) {
+            var childCount = getChildCount(toDoObj.id);
+            var enterBtn = document.createElement("button");
+            enterBtn.className = "btn-enter";
+            enterBtn.title = "하위 할일";
+            enterBtn.innerHTML = childCount > 0 ? "<span class='todo-child-count'>" + childCount + "</span> ›" : "›";
+            enterBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                navigateInto(toDoObj.id);
+            });
+            li.appendChild(enterBtn);
+        }
+
         // 완료 상태 반영
         if (toDoObj.completed) {
             li.classList.add("todo-item--completed");
@@ -410,6 +510,10 @@ function handleSubmit(event) {
         createdAt: Date.now()
     };
 
+    if (currentParentId) {
+        toDoObj.parentId = currentParentId;
+    }
+
     toDos.unshift(toDoObj);
     paintToDo(toDoObj, false, true);
     saveToDos();
@@ -485,7 +589,12 @@ function loadToDos() {
 
     if (loadedToDos !== null) {
         toDos = JSON.parse(loadedToDos);
-        toDos.forEach(toDo => paintToDo(toDo));
+        // 고아 하위 할일 정리
+        toDos = toDos.filter(function(t) {
+            return !t.parentId || toDos.some(function(p) { return p.id === t.parentId; });
+        });
+        // 최상위 할일만 paint (하위 할일은 드릴다운 시 표시)
+        toDos.filter(function(t) { return !t.parentId; }).forEach(function(toDo) { paintToDo(toDo); });
     }
 
     if (loadedArchive !== null) {
@@ -811,7 +920,17 @@ function completeFromMatrix(event) {
     const toDoItem = toDos.find(toDo => toDo.id === li.id);
 
     if (toDoItem && checkbox.checked) {
-        toDos = toDos.filter(toDo => toDo.id !== li.id);
+        // 하위 할일도 함께 아카이브
+        var children = toDos.filter(function(t) { return t.parentId === toDoItem.id; });
+        children.forEach(function(child) {
+            child.completed = true;
+            child.archivedAt = Date.now();
+            archivedToDos.push(child);
+        });
+
+        toDos = toDos.filter(function(toDo) {
+            return toDo.id !== li.id && toDo.parentId !== toDoItem.id;
+        });
         li.remove();
 
         toDoItem.completed = true;
@@ -879,8 +998,8 @@ function renderMatrix() {
     // 모든 매트릭스 리스트 비우기
     matrixLists.forEach(function(list) { list.innerHTML = ""; });
 
-    // 할일을 사분면별로 분류하여 렌더링
-    toDos.forEach(function(todo) {
+    // 최상위 할일만 사분면별로 분류하여 렌더링 (하위 할일 제외)
+    toDos.filter(function(t) { return !t.parentId; }).forEach(function(todo) {
         const quadrant = getQuadrant(todo);
         const targetList = modeMatrix.querySelector('.js-matrixList[data-quadrant="' + quadrant + '"]');
         if (targetList) {
@@ -937,6 +1056,7 @@ function init() {
     toDoForm.addEventListener("submit", handleSubmit);
     archiveToggleBtn.addEventListener("click", toggleArchivePanel);
     modeBtn.addEventListener("click", toggleMode);
+    todoNavBack.addEventListener("click", navigateBack);
     initMatrixDragDrop();
 
     // 아카이브 모달 이벤트
@@ -960,10 +1080,15 @@ function init() {
 
     // 다른 기기에서 데이터 변경 시 UI 전체 갱신
     AppStorage.onRemoteChange(function() {
-        // 할일 목록 다시 그리기
-        toDoList.innerHTML = "";
         toDos = JSON.parse(AppStorage.get(TODOS_LS) || "[]");
-        toDos.forEach(function(toDo) { paintToDo(toDo); });
+
+        // currentParentId가 더 이상 유효하지 않으면 최상위로 복귀
+        if (currentParentId && !toDos.some(function(t) { return t.id === currentParentId; })) {
+            currentParentId = null;
+        }
+
+        // 현재 뷰 다시 그리기
+        renderCurrentView();
 
         // 아카이브 다시 그리기
         archivedToDos = JSON.parse(AppStorage.get(ARCHIVE_LS) || "[]");
