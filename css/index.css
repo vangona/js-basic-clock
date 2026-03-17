@@ -687,13 +687,59 @@ button {
   letter-spacing: 2px;
 }
 
-/* 설명이 있는 할일 항목 - flex-wrap */
-.things:has(.todo-description) {
+/* 확장 영역 (하위 할일 + 설명) */
+.things:has(.todo-expand) {
   flex-wrap: wrap;
 }
 
-.things .todo-description {
+.todo-expand {
   flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* 인라인 하위 할일 목록 */
+.todo-children {
+  list-style: none;
+  padding: 4px 0 2px 22px;
+  margin: 0;
+}
+
+.todo-child-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 0.85em;
+  opacity: 0.75;
+}
+
+.todo-child-item:hover {
+  opacity: 1;
+}
+
+.todo-child-checkbox {
+  width: 13px !important;
+  height: 13px !important;
+}
+
+.todo-child-checkbox:checked::after {
+  font-size: 10px !important;
+}
+
+.todo-child-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.todo-child-item.todo-item--completed .todo-child-text {
+  text-decoration: line-through;
+  opacity: 0.5;
 }
 
 /* 아카이브 상세 버튼 */

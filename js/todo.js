@@ -307,11 +307,11 @@ function editToDoText(event) {
     input.select();
 }
 
-// 설명 토글
+// 설명 토글 (하위 할일 + 설명)
 function toggleDescription(event) {
     const span = event.target;
     const li = span.closest("li");
-    const existing = li.querySelector(".todo-description");
+    const existing = li.querySelector(".todo-expand");
 
     if (existing) {
         existing.remove();
@@ -321,6 +321,54 @@ function toggleDescription(event) {
     const toDoItem = toDos.find(toDo => toDo.id === li.id);
     if (!toDoItem) return;
 
+    const expandDiv = document.createElement("div");
+    expandDiv.className = "todo-expand";
+
+    // 하위 할일 목록 (최상위 할일만)
+    if (!toDoItem.parentId) {
+        var children = toDos.filter(function(t) { return t.parentId === toDoItem.id; });
+        if (children.length > 0) {
+            var childList = document.createElement("ul");
+            childList.className = "todo-children";
+            children.forEach(function(child) {
+                var childLi = document.createElement("li");
+                childLi.className = "todo-child-item";
+                if (child.completed) childLi.classList.add("todo-item--completed");
+
+                var childCheck = document.createElement("input");
+                childCheck.type = "checkbox";
+                childCheck.className = "todo-checkbox todo-child-checkbox";
+                childCheck.checked = child.completed;
+                childCheck.addEventListener("change", function() {
+                    if (childCheck.checked) {
+                        toDos = toDos.filter(function(t) { return t.id !== child.id; });
+                        child.completed = true;
+                        child.archivedAt = Date.now();
+                        archivedToDos.push(child);
+                        saveToDos();
+                        saveArchive();
+                        renderArchive();
+                        childLi.remove();
+                        // 자식 목록이 비면 목록 제거
+                        if (childList.children.length === 0) childList.remove();
+                        // 진입 버튼 개수 업데이트
+                        updateEnterBtnCount(li, toDoItem.id);
+                    }
+                });
+
+                var childText = document.createElement("span");
+                childText.className = "todo-child-text";
+                childText.textContent = child.text;
+
+                childLi.appendChild(childCheck);
+                childLi.appendChild(childText);
+                childList.appendChild(childLi);
+            });
+            expandDiv.appendChild(childList);
+        }
+    }
+
+    // 설명 textarea
     const textarea = document.createElement("textarea");
     textarea.className = "todo-description";
     textarea.placeholder = "설명을 입력하세요...";
@@ -346,13 +394,22 @@ function toggleDescription(event) {
 
     textarea.addEventListener("keydown", function(e) {
         if (e.key === "Escape") {
-            textarea.blur();
-            existing && existing.remove();
+            expandDiv.remove();
         }
     });
 
-    li.appendChild(textarea);
+    expandDiv.appendChild(textarea);
+    li.appendChild(expandDiv);
     textarea.focus();
+}
+
+// 진입 버튼 자식 개수 업데이트
+function updateEnterBtnCount(li, parentId) {
+    var enterBtn = li.querySelector(".btn-enter");
+    if (enterBtn) {
+        var count = getChildCount(parentId);
+        enterBtn.innerHTML = count > 0 ? "<span class='todo-child-count'>" + count + "</span> ›" : "›";
+    }
 }
 
 // 할 일 항목 렌더링
