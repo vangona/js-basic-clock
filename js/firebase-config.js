@@ -12,6 +12,9 @@
 //      match /databases/{database}/documents {
 //        match /users/{userId} {
 //          allow read, write: if request.auth != null && request.auth.uid == userId;
+//          match /backups/{backupId} {
+//            allow read, write: if request.auth != null && request.auth.uid == userId;
+//          }
 //        }
 //      }
 //    }
@@ -49,13 +52,48 @@ if (!firebaseConfig.apiKey) {
     var unsubscribeSnapshot = null;
     var syncTimer = null;
     var lastWriteTimestamp = 0;
+    var BACKUP_INTERVAL = 60 * 60 * 1000; // 1시간
+
+    // 1시간 이내 백업이 없으면 현재 Firestore 데이터를 백업
+    async function backupIfNeeded() {
+        if (!currentUserId) return;
+
+        var lastBackup = parseInt(localStorage.getItem("lastBackupTimestamp") || "0", 10);
+        if (Date.now() - lastBackup < BACKUP_INTERVAL) return;
+
+        try {
+            var currentDoc = await getDoc(doc(db, "users", currentUserId));
+            if (!currentDoc.exists()) return;
+
+            var data = currentDoc.data();
+            // 빈 데이터는 백업할 필요 없음
+            if (!data.todos || data.todos === "[]") return;
+
+            var backupTs = Date.now();
+            await setDoc(doc(db, "users", currentUserId, "backups", String(backupTs)), {
+                todos: data.todos,
+                archivedTodos: data.archivedTodos || "[]",
+                viewMode: data.viewMode || "words",
+                backedUpAt: backupTs,
+                originalLastModified: data.lastModified || 0
+            });
+
+            localStorage.setItem("lastBackupTimestamp", String(backupTs));
+            console.log("[Firebase] 백업 완료:", new Date(backupTs).toLocaleString());
+        } catch (e) {
+            console.error("[Firebase] 백업 실패:", e);
+        }
+    }
 
     // Firestore에 현재 localStorage 데이터 동기화 (1초 debounce)
     function syncToFirestore() {
         if (!currentUserId) return;
 
         clearTimeout(syncTimer);
-        syncTimer = setTimeout(function () {
+        syncTimer = setTimeout(async function () {
+            // 쓰기 전 백업 확인
+            await backupIfNeeded();
+
             var ts = Date.now();
             lastWriteTimestamp = ts;
 
