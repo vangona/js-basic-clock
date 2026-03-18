@@ -59,6 +59,9 @@ if (!firebaseConfig.apiKey) {
             var ts = Date.now();
             lastWriteTimestamp = ts;
 
+            // 로컬 수정 타임스탬프도 함께 저장
+            localStorage.setItem("lastLocalModified", String(ts));
+
             setDoc(doc(db, "users", currentUserId), {
                 todos: window.AppStorage.get("toDos") || "[]",
                 archivedTodos: window.AppStorage.get("toDosArchive") || "[]",
@@ -94,29 +97,44 @@ if (!firebaseConfig.apiKey) {
         });
     }
 
-    // 최초 로그인 시 데이터 병합
+    // 최초 로그인 시 데이터 병합 (타임스탬프 비교로 최신 데이터 보존)
     async function mergeOnFirstConnect() {
         try {
             var remoteDoc = await getDoc(doc(db, "users", currentUserId));
             var localTodos = window.AppStorage.get("toDos");
+            var localModified = parseInt(localStorage.getItem("lastLocalModified") || "0", 10);
 
             if (remoteDoc.exists()) {
                 var remote = remoteDoc.data();
+                var remoteModified = remote.lastModified || 0;
 
                 if (!localTodos || localTodos === "[]") {
                     // 로컬이 비어있으면 원격 데이터 가져오기
+                    console.log("[Firebase] 로컬 비어있음 → 원격 데이터 가져오기");
                     if (remote.todos) localStorage.setItem("toDos", remote.todos);
                     if (remote.archivedTodos) localStorage.setItem("toDosArchive", remote.archivedTodos);
                     if (remote.viewMode) localStorage.setItem("viewMode", remote.viewMode);
-                    lastWriteTimestamp = remote.lastModified || 0;
+                    localStorage.setItem("lastLocalModified", String(remoteModified));
+                    lastWriteTimestamp = remoteModified;
+                    window.AppStorage._notifyChange();
+                } else if (remoteModified > localModified) {
+                    // 원격이 더 최신 → 원격 데이터로 교체
+                    console.log("[Firebase] 원격이 더 최신 (" + new Date(remoteModified).toLocaleString() + " > " + new Date(localModified).toLocaleString() + ") → 원격 데이터 가져오기");
+                    if (remote.todos) localStorage.setItem("toDos", remote.todos);
+                    if (remote.archivedTodos) localStorage.setItem("toDosArchive", remote.archivedTodos);
+                    if (remote.viewMode) localStorage.setItem("viewMode", remote.viewMode);
+                    localStorage.setItem("lastLocalModified", String(remoteModified));
+                    lastWriteTimestamp = remoteModified;
                     window.AppStorage._notifyChange();
                 } else {
-                    // 로컬에 데이터가 있으면 원격으로 푸시
-                    lastWriteTimestamp = remote.lastModified || 0;
+                    // 로컬이 더 최신 (또는 동일) → 로컬 데이터를 원격에 푸시
+                    console.log("[Firebase] 로컬이 더 최신 (" + new Date(localModified).toLocaleString() + " >= " + new Date(remoteModified).toLocaleString() + ") → 로컬 데이터 푸시");
+                    lastWriteTimestamp = remoteModified;
                     syncToFirestore();
                 }
             } else {
                 // 원격 데이터 없음 - 로컬 데이터 푸시
+                console.log("[Firebase] 원격 데이터 없음 → 로컬 데이터 푸시");
                 syncToFirestore();
             }
         } catch (e) {

@@ -87,10 +87,12 @@ function renderCurrentView() {
 
 // 데이터 저장 (localStorage + Firestore 동기화)
 function saveToDos() {
+    localStorage.setItem("lastLocalModified", String(Date.now()));
     AppStorage.set(TODOS_LS, JSON.stringify(toDos));
 }
 
 function saveArchive() {
+    localStorage.setItem("lastLocalModified", String(Date.now()));
     AppStorage.set(ARCHIVE_LS, JSON.stringify(archivedToDos));
 }
 
@@ -1156,8 +1158,22 @@ function init() {
             renderMatrix();
         }
 
-        // 모드 다시 로드
-        loadMode();
+        // 모드 다시 로드 (sync 트리거 없이 UI만 갱신)
+        var savedMode = AppStorage.get(MODE_LS);
+        modeWords.classList.remove("showing");
+        modeTodos.classList.remove("showing");
+        modeMatrix.classList.remove("showing");
+        if (savedMode === "todos") {
+            modeTodos.classList.add("showing");
+            modeIcon.textContent = "✦";
+        } else if (savedMode === "matrix") {
+            modeMatrix.classList.add("showing");
+            modeIcon.textContent = "⊞";
+            renderMatrix();
+        } else {
+            modeWords.classList.add("showing");
+            modeIcon.textContent = "☰";
+        }
     });
 }
 
