@@ -29,7 +29,13 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     matrixLists = document.querySelectorAll(".js-matrixList"),
     todoNavBar = document.querySelector(".js-todoNavBar"),
     todoNavBack = document.querySelector(".js-todoNavBack"),
-    todoNavTitle = document.querySelector(".js-todoNavTitle");
+    todoNavTitle = document.querySelector(".js-todoNavTitle"),
+    modePeople = document.querySelector(".js-modePeople"),
+    peopleListDiv = document.querySelector(".js-peopleList"),
+    peopleTodosDiv = document.querySelector(".js-peopleTodos"),
+    peopleBack = document.querySelector(".js-peopleBack"),
+    peopleName = document.querySelector(".js-peopleName"),
+    peopleTodoList = document.querySelector(".js-peopleTodoList");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
@@ -44,6 +50,60 @@ let currentParentId = null;
 // UUID 생성 함수
 function generateId() {
     return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+// 텍스트 파싱: @MMDD 또는 @YYYYMMDD → 마감일
+function parseDueDate(text) {
+    var match = text.match(/@(\d{8})\b|@(\d{4})\b/);
+    if (!match) return { cleanText: text, dueDate: null };
+
+    var digits = match[1] || match[2];
+    var year, month, day;
+
+    if (digits.length === 8) {
+        year = parseInt(digits.substring(0, 4), 10);
+        month = parseInt(digits.substring(4, 6), 10) - 1;
+        day = parseInt(digits.substring(6, 8), 10);
+    } else {
+        month = parseInt(digits.substring(0, 2), 10) - 1;
+        day = parseInt(digits.substring(2, 4), 10);
+        year = new Date().getFullYear();
+        var candidate = new Date(year, month, day);
+        var twoMonthsAgo = new Date();
+        twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+        if (candidate < twoMonthsAgo) year++;
+    }
+
+    var date = new Date(year, month, day);
+    if (isNaN(date.getTime()) || date.getMonth() !== month) {
+        return { cleanText: text, dueDate: null };
+    }
+
+    var cleanText = text.replace(match[0], "").replace(/\s{2,}/g, " ").trim();
+    return { cleanText: cleanText, dueDate: date.getTime() };
+}
+
+// 텍스트 파싱: @이름 → 담당자
+function parseAssignees(text) {
+    var regex = /@([가-힣a-zA-Z][^\s@]{0,9})/g;
+    var assignees = [];
+    var m;
+    while ((m = regex.exec(text)) !== null) {
+        if (assignees.indexOf(m[1]) === -1) assignees.push(m[1]);
+    }
+    var cleanText = text.replace(/@[가-힣a-zA-Z][^\s@]{0,9}/g, "").replace(/\s{2,}/g, " ").trim();
+    return { cleanText: cleanText, assignees: assignees };
+}
+
+// 통합 파싱: 날짜 먼저, 그 다음 사람
+function parseToDoText(rawText) {
+    var dateResult = parseDueDate(rawText);
+    var assigneeResult = parseAssignees(dateResult.cleanText);
+    return {
+        text: assigneeResult.cleanText,
+        dueDate: dateResult.dueDate,
+        assignees: assigneeResult.assignees
+    };
 }
 
 // 하위 할일 헬퍼
@@ -267,6 +327,48 @@ function formatDate(timestamp) {
     return (d.getMonth() + 1).toString().padStart(2, "0") + "." + d.getDate().toString().padStart(2, "0");
 }
 
+function getDDayText(dueDate) {
+    if (!dueDate) return null;
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var due = new Date(dueDate);
+    due.setHours(0, 0, 0, 0);
+    var diff = Math.round((due - today) / (1000 * 60 * 60 * 24));
+    if (diff > 0) return { label: "D-" + diff, status: "upcoming" };
+    if (diff === 0) return { label: "D-Day", status: "today" };
+    return { label: "D+" + Math.abs(diff), status: "overdue" };
+}
+
+function renderBadges(li, toDoObj) {
+    // 기존 배지 제거
+    li.querySelectorAll(".dday-badge, .assignee-badge").forEach(function(el) { el.remove(); });
+
+    var textSpan = li.querySelector(".todo-text");
+    if (!textSpan) return;
+    var ref = textSpan.nextSibling;
+
+    // D-Day 배지
+    var dday = getDDayText(toDoObj.dueDate);
+    if (dday) {
+        var ddayEl = document.createElement("span");
+        ddayEl.className = "dday-badge dday-" + dday.status;
+        ddayEl.textContent = dday.label;
+        li.insertBefore(ddayEl, ref);
+        ref = ddayEl.nextSibling;
+    }
+
+    // 담당자 배지
+    if (toDoObj.assignees && toDoObj.assignees.length > 0) {
+        toDoObj.assignees.forEach(function(name) {
+            var badge = document.createElement("span");
+            badge.className = "assignee-badge";
+            badge.textContent = "@" + name;
+            li.insertBefore(badge, ref);
+            ref = badge.nextSibling;
+        });
+    }
+}
+
 function getDaysDiff(from, to) {
     if (!from || !to) return null;
     const diff = Math.floor((to - from) / (1000 * 60 * 60 * 24));
@@ -287,9 +389,13 @@ function editToDoText(event) {
 
     function finishEdit() {
         const newText = input.value.trim();
-        if (newText && newText !== toDoItem.text) {
-            toDoItem.text = newText;
-            span.innerText = newText;
+        if (newText) {
+            const parsed = parseToDoText(newText);
+            toDoItem.text = parsed.text;
+            if (parsed.dueDate) toDoItem.dueDate = parsed.dueDate;
+            if (parsed.assignees.length > 0) toDoItem.assignees = parsed.assignees;
+            span.innerText = parsed.text;
+            renderBadges(li, toDoItem);
             saveToDos();
         }
         input.replaceWith(span);
@@ -369,6 +475,34 @@ function toggleDescription(event) {
             expandDiv.appendChild(childList);
         }
     }
+
+    // 마감일 입력
+    var dateRow = document.createElement("div");
+    dateRow.className = "todo-duedate-row";
+    var dateLabel = document.createElement("span");
+    dateLabel.textContent = "마감일";
+    dateLabel.className = "todo-duedate-label";
+    var dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.className = "todo-duedate-input";
+    if (toDoItem.dueDate) {
+        var d = new Date(toDoItem.dueDate);
+        dateInput.value = d.getFullYear() + "-" +
+            String(d.getMonth() + 1).padStart(2, "0") + "-" +
+            String(d.getDate()).padStart(2, "0");
+    }
+    dateInput.addEventListener("change", function() {
+        if (dateInput.value) {
+            toDoItem.dueDate = new Date(dateInput.value + "T00:00:00").getTime();
+        } else {
+            delete toDoItem.dueDate;
+        }
+        renderBadges(li, toDoItem);
+        saveToDos();
+    });
+    dateRow.appendChild(dateLabel);
+    dateRow.appendChild(dateInput);
+    expandDiv.appendChild(dateRow);
 
     // 설명 textarea
     const textarea = document.createElement("textarea");
@@ -455,6 +589,9 @@ function paintToDo(toDoObj, isArchived = false, prepend = false) {
         label.appendChild(checkbox);
         li.appendChild(label);
         li.appendChild(span);
+
+        // D-Day + 담당자 배지
+        renderBadges(li, toDoObj);
 
         // 설명이 있으면 인디케이터 표시
         if (toDoObj.description) {
@@ -562,12 +699,15 @@ function handleSubmit(event) {
 
     if (currentValue === "") return;
 
+    const parsed = parseToDoText(currentValue);
     const toDoObj = {
-        text: currentValue,
+        text: parsed.text,
         id: generateId(),
         completed: false,
         createdAt: Date.now()
     };
+    if (parsed.dueDate) toDoObj.dueDate = parsed.dueDate;
+    if (parsed.assignees.length > 0) toDoObj.assignees = parsed.assignees;
 
     if (currentParentId) {
         toDoObj.parentId = currentParentId;
@@ -606,6 +746,7 @@ function setMode(mode) {
     modeWords.classList.remove("showing");
     modeTodos.classList.remove("showing");
     modeMatrix.classList.remove("showing");
+    modePeople.classList.remove("showing");
 
     if (mode === "todos") {
         modeTodos.classList.add("showing");
@@ -614,6 +755,10 @@ function setMode(mode) {
         modeMatrix.classList.add("showing");
         modeIcon.textContent = "⊞";
         renderMatrix();
+    } else if (mode === "people") {
+        modePeople.classList.add("showing");
+        modeIcon.textContent = "👤";
+        renderPeopleView();
     } else {
         modeWords.classList.add("showing");
         modeIcon.textContent = "☰";
@@ -628,6 +773,8 @@ function toggleMode() {
         setMode("todos");
     } else if (modeTodos.classList.contains("showing")) {
         setMode("matrix");
+    } else if (modeMatrix.classList.contains("showing")) {
+        setMode("people");
     } else {
         setMode("words");
     }
@@ -636,7 +783,7 @@ function toggleMode() {
 // 저장된 모드 로드
 function loadMode() {
     const savedMode = AppStorage.get(MODE_LS);
-    if (savedMode === "todos" || savedMode === "matrix") {
+    if (savedMode === "todos" || savedMode === "matrix" || savedMode === "people") {
         setMode(savedMode);
     }
 }
@@ -1036,6 +1183,9 @@ function paintMatrixItem(toDoObj, targetList) {
     li.appendChild(label);
     li.appendChild(span);
 
+    // D-Day + 담당자 배지
+    renderBadges(li, toDoObj);
+
     // 매트릭스 드래그 이벤트
     li.addEventListener("dragstart", function(e) {
         draggedItem = li;
@@ -1106,6 +1256,71 @@ function initMatrixDragDrop() {
     });
 }
 
+// ===== 사람 뷰 =====
+function getAllAssignees() {
+    var names = [];
+    toDos.forEach(function(t) {
+        if (t.assignees) {
+            t.assignees.forEach(function(a) {
+                if (names.indexOf(a) === -1) names.push(a);
+            });
+        }
+    });
+    return names.sort();
+}
+
+function renderPeopleView() {
+    peopleTodosDiv.style.display = "none";
+    peopleListDiv.style.display = "";
+    peopleListDiv.innerHTML = "";
+
+    var assignees = getAllAssignees();
+    if (assignees.length === 0) {
+        var empty = document.createElement("p");
+        empty.className = "people-empty";
+        empty.textContent = "할일에 @이름을 입력하면 여기에 표시됩니다";
+        peopleListDiv.appendChild(empty);
+        return;
+    }
+
+    assignees.forEach(function(name) {
+        var count = toDos.filter(function(t) {
+            return t.assignees && t.assignees.indexOf(name) !== -1;
+        }).length;
+
+        var card = document.createElement("div");
+        card.className = "people-card";
+
+        var nameSpan = document.createElement("span");
+        nameSpan.className = "people-card-name";
+        nameSpan.textContent = name;
+
+        var countSpan = document.createElement("span");
+        countSpan.className = "people-card-count";
+        countSpan.textContent = count + "건";
+
+        card.appendChild(nameSpan);
+        card.appendChild(countSpan);
+        card.addEventListener("click", function() { showPersonTodos(name); });
+        peopleListDiv.appendChild(card);
+    });
+}
+
+function showPersonTodos(name) {
+    peopleListDiv.style.display = "none";
+    peopleTodosDiv.style.display = "";
+    peopleName.textContent = name;
+    peopleTodoList.innerHTML = "";
+
+    var todos = toDos.filter(function(t) {
+        return t.assignees && t.assignees.indexOf(name) !== -1;
+    });
+
+    todos.forEach(function(todo) {
+        paintMatrixItem(todo, peopleTodoList);
+    });
+}
+
 function init() {
     loadToDos();
     loadMode();
@@ -1116,6 +1331,7 @@ function init() {
     archiveToggleBtn.addEventListener("click", toggleArchivePanel);
     modeBtn.addEventListener("click", toggleMode);
     todoNavBack.addEventListener("click", navigateBack);
+    peopleBack.addEventListener("click", renderPeopleView);
     initMatrixDragDrop();
 
     // 아카이브 모달 이벤트
@@ -1158,11 +1374,17 @@ function init() {
             renderMatrix();
         }
 
+        // 사람 모드면 다시 렌더링
+        if (modePeople.classList.contains("showing")) {
+            renderPeopleView();
+        }
+
         // 모드 다시 로드 (sync 트리거 없이 UI만 갱신)
         var savedMode = AppStorage.get(MODE_LS);
         modeWords.classList.remove("showing");
         modeTodos.classList.remove("showing");
         modeMatrix.classList.remove("showing");
+        modePeople.classList.remove("showing");
         if (savedMode === "todos") {
             modeTodos.classList.add("showing");
             modeIcon.textContent = "✦";
@@ -1170,6 +1392,10 @@ function init() {
             modeMatrix.classList.add("showing");
             modeIcon.textContent = "⊞";
             renderMatrix();
+        } else if (savedMode === "people") {
+            modePeople.classList.add("showing");
+            modeIcon.textContent = "👤";
+            renderPeopleView();
         } else {
             modeWords.classList.add("showing");
             modeIcon.textContent = "☰";
