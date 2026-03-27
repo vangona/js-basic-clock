@@ -1,6 +1,6 @@
 // Storage 추상화 레이어 - localStorage 우선, Firestore 백그라운드 동기화
 (function () {
-    var SYNC_KEYS = ["toDos", "toDosArchive", "viewMode"];
+    var SYNC_KEYS = ["toDos", "toDosArchive", "viewMode", "currentUser"];
     var syncFn = null;
     var changeCallback = null;
 

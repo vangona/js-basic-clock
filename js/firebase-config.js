@@ -74,6 +74,7 @@ if (!firebaseConfig.apiKey) {
                 todos: data.todos,
                 archivedTodos: data.archivedTodos || "[]",
                 viewMode: data.viewMode || "words",
+                currentUser: data.currentUser || "",
                 backedUpAt: backupTs,
                 originalLastModified: data.lastModified || 0
             });
@@ -104,6 +105,7 @@ if (!firebaseConfig.apiKey) {
                 todos: window.AppStorage.get("toDos") || "[]",
                 archivedTodos: window.AppStorage.get("toDosArchive") || "[]",
                 viewMode: window.AppStorage.get("viewMode") || "words",
+                currentUser: window.AppStorage.get("currentUser") || "",
                 lastModified: ts
             }).catch(function (e) {
                 console.error("[Firebase] 동기화 실패:", e);
@@ -129,6 +131,12 @@ if (!firebaseConfig.apiKey) {
             if (data.todos) localStorage.setItem("toDos", data.todos);
             if (data.archivedTodos) localStorage.setItem("toDosArchive", data.archivedTodos);
             if (data.viewMode) localStorage.setItem("viewMode", data.viewMode);
+            if (data.currentUser) localStorage.setItem("currentUser", data.currentUser);
+
+            // 이름이 변경되었으면 인사말 UI 갱신
+            if (data.currentUser && window.onFirebaseUser) {
+                window.onFirebaseUser({ displayName: data.currentUser });
+            }
 
             // UI 갱신 알림
             window.AppStorage._notifyChange();
@@ -152,6 +160,7 @@ if (!firebaseConfig.apiKey) {
                     if (remote.todos) localStorage.setItem("toDos", remote.todos);
                     if (remote.archivedTodos) localStorage.setItem("toDosArchive", remote.archivedTodos);
                     if (remote.viewMode) localStorage.setItem("viewMode", remote.viewMode);
+                    if (remote.currentUser) localStorage.setItem("currentUser", remote.currentUser);
                     localStorage.setItem("lastLocalModified", String(remoteModified));
                     lastWriteTimestamp = remoteModified;
                     window.AppStorage._notifyChange();
@@ -161,6 +170,7 @@ if (!firebaseConfig.apiKey) {
                     if (remote.todos) localStorage.setItem("toDos", remote.todos);
                     if (remote.archivedTodos) localStorage.setItem("toDosArchive", remote.archivedTodos);
                     if (remote.viewMode) localStorage.setItem("viewMode", remote.viewMode);
+                    if (remote.currentUser) localStorage.setItem("currentUser", remote.currentUser);
                     localStorage.setItem("lastLocalModified", String(remoteModified));
                     lastWriteTimestamp = remoteModified;
                     window.AppStorage._notifyChange();
