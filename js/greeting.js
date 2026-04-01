@@ -35,10 +35,34 @@ function askForName(){
 function paintGreeting(text){
     form.classList.remove(SHOWING_CN);
     greeting.classList.add(SHOWING_CN);
-    greeting.innerHTML = 
-    `행복한 하루 되세요. <a class="deleteBtn__name">${text}</a>.`;
-    const deleteBtnName = document.querySelector(".deleteBtn__name")
-    deleteBtnName.addEventListener("click", deleteName)
+    greeting.innerHTML =
+    `행복한 하루 되세요. <span class="editableBtn__name">${text}</span>.`;
+    const nameEl = document.querySelector(".editableBtn__name");
+    nameEl.addEventListener("click", function() {
+        nameEl.contentEditable = "true";
+        nameEl.focus();
+        // 텍스트 전체 선택
+        var range = document.createRange();
+        range.selectNodeContents(nameEl);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    });
+    nameEl.addEventListener("blur", function() {
+        nameEl.contentEditable = "false";
+        var newName = nameEl.textContent.trim();
+        if (newName === "") {
+            deleteName();
+        } else {
+            saveName(newName);
+        }
+    });
+    nameEl.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            nameEl.blur();
+        }
+    });
 }
 
 function loadName(){

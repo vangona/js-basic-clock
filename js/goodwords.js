@@ -1,5 +1,4 @@
 const words = document.querySelector(".js-goodwords");
-const bgImage = document.querySelector(".bgImage");
 
 const GOOD_WORDS = [
     "사람들은 삶의 의무 또는 \n현재의 불행과 따분함에서 벗어나고자 \n갖가지 핑계를 대며 대중운동에 휩쓸린다. \n- 에릭 호퍼",
@@ -50,7 +49,7 @@ function paintWord(){
 
 
 function init (){
-    bgImage.onload = paintWord();
+    paintWord();
 }
 
 init();

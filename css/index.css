@@ -12,6 +12,7 @@ body {
   color: white;
   font-family: "Nanum Myeongjo", serif;
   overflow: hidden;
+  min-height: 100vh;
 }
 
 .form,
@@ -85,12 +86,20 @@ form input::placeholder {
   letter-spacing: 10px;
 }
 
-.deleteBtn__name {
+.editableBtn__name {
   padding-left: 0.5rem;
+  border-bottom: 1px dashed transparent;
+  transition: border-color 0.2s;
 }
 
-.deleteBtn__name:hover {
+.editableBtn__name:hover {
   cursor: pointer;
+  border-bottom-color: rgba(255,255,255,0.5);
+}
+
+.editableBtn__name[contenteditable="true"] {
+  border-bottom-color: white;
+  outline: none;
 }
 
 .js-form input {
