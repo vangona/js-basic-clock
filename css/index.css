@@ -1367,8 +1367,7 @@ button {
 }
 
 /* ===== 사람 뷰 ===== */
-.mode-people {
-  display: flex;
+.mode-people.showing {
   flex-direction: column;
   height: 100%;
   overflow-y: auto;
