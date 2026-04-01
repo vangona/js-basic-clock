@@ -113,6 +113,22 @@ if (!firebaseConfig.apiKey) {
         }, 1000);
     }
 
+    // 원격 데이터가 빈 배열이고 로컬에 데이터가 있으면 덮어쓰지 않음
+    function safeSetTodos(key, remoteValue) {
+        if (!remoteValue) return;
+        var localValue = localStorage.getItem(key);
+        try {
+            var remoteArr = JSON.parse(remoteValue);
+            var localArr = localValue ? JSON.parse(localValue) : [];
+            if (Array.isArray(remoteArr) && remoteArr.length === 0 && localArr.length > 0) {
+                console.log("[Firebase] 원격 " + key + " 비어있음, 로컬 데이터(" + localArr.length + "개) 보존");
+                return false;
+            }
+        } catch (e) { /* JSON 파싱 실패 시 그냥 덮어쓰기 */ }
+        localStorage.setItem(key, remoteValue);
+        return true;
+    }
+
     // Firestore 실시간 리스너 - 다른 기기의 변경 감지
     function startListening() {
         if (unsubscribeSnapshot) unsubscribeSnapshot();
@@ -127,9 +143,9 @@ if (!firebaseConfig.apiKey) {
 
             lastWriteTimestamp = data.lastModified;
 
-            // localStorage 업데이트
-            if (data.todos) localStorage.setItem("toDos", data.todos);
-            if (data.archivedTodos) localStorage.setItem("toDosArchive", data.archivedTodos);
+            // localStorage 업데이트 (빈 배열로 로컬 데이터 덮어쓰기 방지)
+            safeSetTodos("toDos", data.todos);
+            safeSetTodos("toDosArchive", data.archivedTodos);
             if (data.viewMode) localStorage.setItem("viewMode", data.viewMode);
             if (data.currentUser) localStorage.setItem("currentUser", data.currentUser);
 
@@ -157,8 +173,8 @@ if (!firebaseConfig.apiKey) {
                 if (!localTodos || localTodos === "[]") {
                     // 로컬이 비어있으면 원격 데이터 가져오기
                     console.log("[Firebase] 로컬 비어있음 → 원격 데이터 가져오기");
-                    if (remote.todos) localStorage.setItem("toDos", remote.todos);
-                    if (remote.archivedTodos) localStorage.setItem("toDosArchive", remote.archivedTodos);
+                    safeSetTodos("toDos", remote.todos);
+                    safeSetTodos("toDosArchive", remote.archivedTodos);
                     if (remote.viewMode) localStorage.setItem("viewMode", remote.viewMode);
                     if (remote.currentUser) localStorage.setItem("currentUser", remote.currentUser);
                     localStorage.setItem("lastLocalModified", String(remoteModified));
@@ -167,8 +183,8 @@ if (!firebaseConfig.apiKey) {
                 } else if (remoteModified > localModified) {
                     // 원격이 더 최신 → 원격 데이터로 교체
                     console.log("[Firebase] 원격이 더 최신 (" + new Date(remoteModified).toLocaleString() + " > " + new Date(localModified).toLocaleString() + ") → 원격 데이터 가져오기");
-                    if (remote.todos) localStorage.setItem("toDos", remote.todos);
-                    if (remote.archivedTodos) localStorage.setItem("toDosArchive", remote.archivedTodos);
+                    safeSetTodos("toDos", remote.todos);
+                    safeSetTodos("toDosArchive", remote.archivedTodos);
                     if (remote.viewMode) localStorage.setItem("viewMode", remote.viewMode);
                     if (remote.currentUser) localStorage.setItem("currentUser", remote.currentUser);
                     localStorage.setItem("lastLocalModified", String(remoteModified));
