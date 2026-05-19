@@ -391,6 +391,24 @@ function renderBadges(li, toDoObj) {
     li.insertBefore(addBtn, ref);
 }
 
+// 핀 토글 (몰입 모드 대상 마킹)
+function togglePin(toDoItem, btn) {
+    if (toDoItem.focused) {
+        delete toDoItem.focused;
+        btn.textContent = "☆";
+        btn.classList.remove("btn-focus--active");
+    } else {
+        toDoItem.focused = true;
+        btn.textContent = "★";
+        btn.classList.add("btn-focus--active");
+    }
+    saveToDos();
+    // 현재 몰입 모드를 보고 있으면 즉시 재렌더링
+    if (modeFocus.classList.contains("showing")) {
+        renderFocus();
+    }
+}
+
 function showAssigneeInput(li, toDoObj, addBtn) {
     // 이미 입력창이 열려있으면 무시
     if (li.querySelector(".assignee-input")) return;
@@ -662,6 +680,20 @@ function paintToDo(toDoObj, isArchived = false, prepend = false) {
         }
 
         li.appendChild(deleteBtn);
+
+        // 핀 버튼 (최상위 할일만)
+        if (!toDoObj.parentId) {
+            const pinBtn = document.createElement("button");
+            pinBtn.className = "btn-focus";
+            pinBtn.textContent = toDoObj.focused ? "★" : "☆";
+            if (toDoObj.focused) pinBtn.classList.add("btn-focus--active");
+            pinBtn.title = "몰입 모드에 추가/제거";
+            pinBtn.addEventListener("click", function(e) {
+                e.stopPropagation();
+                togglePin(toDoObj, pinBtn);
+            });
+            li.appendChild(pinBtn);
+        }
 
         // 하위 할일 진입 버튼 (최상위 할일만, 하위 할일에는 표시 안함)
         if (!toDoObj.parentId) {
