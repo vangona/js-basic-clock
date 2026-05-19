@@ -340,8 +340,8 @@ function getDDayText(dueDate) {
 }
 
 function renderBadges(li, toDoObj) {
-    // 기존 배지 제거
-    li.querySelectorAll(".dday-badge, .assignee-badge").forEach(function(el) { el.remove(); });
+    // 기존 배지 및 추가 버튼 제거
+    li.querySelectorAll(".dday-badge, .assignee-badge, .btn-add-assignee").forEach(function(el) { el.remove(); });
 
     var textSpan = li.querySelector(".todo-text");
     if (!textSpan) return;
@@ -357,16 +357,73 @@ function renderBadges(li, toDoObj) {
         ref = ddayEl.nextSibling;
     }
 
-    // 담당자 배지
+    // 담당자 배지 (클릭하면 삭제)
     if (toDoObj.assignees && toDoObj.assignees.length > 0) {
         toDoObj.assignees.forEach(function(name) {
             var badge = document.createElement("span");
             badge.className = "assignee-badge";
             badge.textContent = "@" + name;
+            badge.title = "클릭하여 제거";
+            badge.style.cursor = "pointer";
+            badge.addEventListener("click", function(e) {
+                e.stopPropagation();
+                toDoObj.assignees = toDoObj.assignees.filter(function(a) { return a !== name; });
+                saveToDos();
+                renderBadges(li, toDoObj);
+            });
             li.insertBefore(badge, ref);
             ref = badge.nextSibling;
         });
     }
+
+    // 담당자 추가 "+" 버튼
+    var addBtn = document.createElement("span");
+    addBtn.className = "btn-add-assignee";
+    addBtn.textContent = "+";
+    addBtn.title = "담당자 추가";
+    addBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        showAssigneeInput(li, toDoObj, addBtn);
+    });
+    li.insertBefore(addBtn, ref);
+}
+
+function showAssigneeInput(li, toDoObj, addBtn) {
+    // 이미 입력창이 열려있으면 무시
+    if (li.querySelector(".assignee-input")) return;
+
+    var input = document.createElement("input");
+    input.type = "text";
+    input.className = "assignee-input";
+    input.placeholder = "이름";
+    input.style.width = "60px";
+
+    addBtn.replaceWith(input);
+    input.focus();
+
+    function finish() {
+        var name = input.value.trim();
+        if (name) {
+            if (!toDoObj.assignees) toDoObj.assignees = [];
+            if (toDoObj.assignees.indexOf(name) === -1) {
+                toDoObj.assignees.push(name);
+                saveToDos();
+            }
+        }
+        renderBadges(li, toDoObj);
+    }
+
+    input.addEventListener("blur", finish);
+    input.addEventListener("keydown", function(e) {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            input.blur();
+        }
+        if (e.key === "Escape") {
+            input.value = "";
+            input.blur();
+        }
+    });
 }
 
 function getDaysDiff(from, to) {

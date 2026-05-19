@@ -1331,6 +1331,38 @@ button {
   white-space: nowrap;
 }
 
+.assignee-badge:hover {
+  background: rgba(255, 80, 80, 0.25);
+  color: rgba(255, 140, 140, 0.9);
+}
+
+.btn-add-assignee {
+  font-size: 0.65em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-add-assignee:hover {
+  background: rgba(80, 150, 255, 0.2);
+  color: rgba(140, 190, 255, 0.9);
+}
+
+.assignee-input {
+  font-size: 0.65em;
+  padding: 1px 4px;
+  border-radius: 3px;
+  border: 1px solid rgba(140, 190, 255, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  color: rgba(140, 190, 255, 0.9);
+  outline: none;
+  font-family: inherit;
+}
+
 /* 매트릭스 내 배지 크기 조정 */
 .matrix-item .dday-badge {
   font-size: 0.6em;
