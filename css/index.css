@@ -140,7 +140,7 @@ form input::placeholder {
 }
 
 .things {
-  padding: 0 50px 10px 50px;
+  padding: 0 clamp(8px, 4vw, 50px) 10px;
 }
 
 .js-toDoList::-webkit-scrollbar {
@@ -162,12 +162,14 @@ button {
 /* 컨텐츠 박스 (명언 + 할일 통합) */
 .content-box {
   position: relative;
-  margin-top: 30px;
-  padding: 30px;
+  margin-top: clamp(8px, 3vmin, 30px);
+  padding: clamp(12px, 3vmin, 30px);
   background-color: rgba(0, 0, 0, 0.35);
   border-radius: 8px;
   min-width: 280px;
   min-height: 150px;
+  max-width: min(560px, 92vw);
+  max-height: min(70dvh, calc(100dvh - 200px));
   resize: both;
   overflow: hidden;
   animation: fadeIn 1s linear;
