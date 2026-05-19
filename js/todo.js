@@ -202,6 +202,7 @@ function restoreFromArchive(event) {
         // 활성 목록에 추가
         toDoItem.completed = false;
         delete toDoItem.archivedAt;
+        delete toDoItem.focused;
         toDos.push(toDoItem);
 
         // 하위 할일도 함께 복원
@@ -209,6 +210,7 @@ function restoreFromArchive(event) {
         children.forEach(function(child) {
             child.completed = false;
             delete child.archivedAt;
+            delete child.focused;
             toDos.push(child);
         });
         archivedToDos = archivedToDos.filter(function(t) { return t.parentId !== toDoItem.id; });
@@ -237,6 +239,7 @@ function toggleComplete(event) {
         children.forEach(function(child) {
             child.completed = true;
             child.archivedAt = Date.now();
+            delete child.focused;
             archivedToDos.push(child);
         });
 
@@ -249,6 +252,7 @@ function toggleComplete(event) {
         // 아카이브로 이동
         toDoItem.completed = true;
         toDoItem.archivedAt = Date.now();
+        delete toDoItem.focused;
         archivedToDos.push(toDoItem);
 
         saveToDos();
@@ -1233,6 +1237,7 @@ function completeFromMatrix(event) {
         children.forEach(function(child) {
             child.completed = true;
             child.archivedAt = Date.now();
+            delete child.focused;
             archivedToDos.push(child);
         });
 
@@ -1243,6 +1248,7 @@ function completeFromMatrix(event) {
 
         toDoItem.completed = true;
         toDoItem.archivedAt = Date.now();
+        delete toDoItem.focused;
         archivedToDos.push(toDoItem);
 
         saveToDos();
