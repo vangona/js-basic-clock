@@ -1453,6 +1453,11 @@ function paintFocusItem(toDoObj) {
         delete toDoObj.focused;
         archivedToDos.push(toDoObj);
 
+        // 다른 뷰가 이 항목으로 드릴다운 중이면 뒤로가기
+        if (currentParentId === toDoObj.id) {
+            navigateBack();
+        }
+
         saveToDos();
         saveArchive();
         renderArchive();
