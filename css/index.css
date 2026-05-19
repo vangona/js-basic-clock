@@ -38,10 +38,10 @@ body {
 }
 
 .js-clock {
-  margin-top: 8%;
-  letter-spacing: 10px;
-  font-size: 30px;
-  padding-bottom: 3%;
+  margin-top: clamp(8px, 4vmin, 60px);
+  letter-spacing: clamp(2px, 1.5vmin, 10px);
+  font-size: clamp(18px, 5vmin, 30px);
+  padding-bottom: clamp(4px, 2vmin, 20px);
 }
 
 form input {
@@ -89,8 +89,13 @@ form input::placeholder {
 }
 
 .greetings {
-  font-size: 30px;
-  letter-spacing: 10px;
+  font-size: clamp(13px, 3.5vmin, 28px);
+  letter-spacing: clamp(2px, 1vmin, 10px);
+  margin: clamp(4px, 2vmin, 20px) 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 90vw;
 }
 
 .editableBtn__name {
