@@ -918,11 +918,13 @@ function loadToDos() {
 // 컨텐츠 박스 크기 저장/복원
 function loadBoxSize() {
     const saved = localStorage.getItem(BOX_SIZE_LS);
-    if (saved) {
-        const { width, height } = JSON.parse(saved);
-        contentBox.style.width = width + "px";
-        contentBox.style.height = height + "px";
-    }
+    if (!saved) return;
+    const { width, height } = JSON.parse(saved);
+    // viewport에 맞게 clamp — 데스크탑에서 늘린 값이 모바일에서 넘치지 않도록
+    const maxW = window.innerWidth * 0.92;
+    const maxH = window.innerHeight * 0.70;
+    contentBox.style.width = Math.min(width, maxW) + "px";
+    contentBox.style.height = Math.min(height, maxH) + "px";
 }
 
 function initBoxResize() {
