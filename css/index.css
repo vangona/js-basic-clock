@@ -293,8 +293,8 @@ button {
 .js-weather {
   font-size: 20px;
   position: absolute;
-  top: 20px;
-  right: 30px;
+  top: calc(20px + env(safe-area-inset-top));
+  right: calc(30px + env(safe-area-inset-right));
 }
 
 @media screen and (max-height: 767px) {
@@ -463,8 +463,8 @@ button {
 /* 아카이브 메뉴 */
 .archive-menu {
   position: fixed;
-  top: 20px;
-  left: 20px;
+  top: calc(20px + env(safe-area-inset-top));
+  left: calc(20px + env(safe-area-inset-left));
   z-index: 100;
 }
 
@@ -519,7 +519,7 @@ button {
   position: absolute;
   top: 40px;
   left: 0;
-  width: 280px;
+  width: min(280px, calc(100vw - 40px));
   max-height: 300px;
   background-color: rgba(0, 0, 0, 0.85);
   border-radius: 10px;
@@ -1072,8 +1072,8 @@ button {
 /* ===== 동기화 버튼 ===== */
 .sync-status {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
+  left: calc(20px + env(safe-area-inset-left));
   z-index: 100;
 }
 
