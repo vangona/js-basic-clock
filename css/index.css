@@ -1490,3 +1490,5 @@ button {
   overflow-y: auto;
   flex: 1;
 }
+
+.focus-empty.showing { display: block; }

@@ -35,7 +35,10 @@ const toDoForm = document.querySelector(".js-toDoForm"),
     peopleTodosDiv = document.querySelector(".js-peopleTodos"),
     peopleBack = document.querySelector(".js-peopleBack"),
     peopleName = document.querySelector(".js-peopleName"),
-    peopleTodoList = document.querySelector(".js-peopleTodoList");
+    peopleTodoList = document.querySelector(".js-peopleTodoList"),
+    modeFocus = document.querySelector(".js-modeFocus"),
+    focusList = document.querySelector(".js-focusList"),
+    focusEmpty = document.querySelector(".js-focusEmpty");
 
 const TODOS_LS = "toDos";
 const ARCHIVE_LS = "toDosArchive";
@@ -804,6 +807,8 @@ function setMode(mode) {
     modeTodos.classList.remove("showing");
     modeMatrix.classList.remove("showing");
     modePeople.classList.remove("showing");
+    modeFocus.classList.remove("showing");
+    document.body.classList.remove("focus-mode");
 
     if (mode === "todos") {
         modeTodos.classList.add("showing");
@@ -816,6 +821,11 @@ function setMode(mode) {
         modePeople.classList.add("showing");
         modeIcon.textContent = "👤";
         renderPeopleView();
+    } else if (mode === "focus") {
+        modeFocus.classList.add("showing");
+        document.body.classList.add("focus-mode");
+        modeIcon.textContent = "◉";
+        renderFocus();
     } else {
         modeWords.classList.add("showing");
         modeIcon.textContent = "☰";
@@ -832,6 +842,8 @@ function toggleMode() {
         setMode("matrix");
     } else if (modeMatrix.classList.contains("showing")) {
         setMode("people");
+    } else if (modePeople.classList.contains("showing")) {
+        setMode("focus");
     } else {
         setMode("words");
     }
@@ -840,7 +852,8 @@ function toggleMode() {
 // 저장된 모드 로드
 function loadMode() {
     const savedMode = AppStorage.get(MODE_LS);
-    if (savedMode === "todos" || savedMode === "matrix" || savedMode === "people") {
+    if (savedMode === "todos" || savedMode === "matrix" ||
+        savedMode === "people" || savedMode === "focus") {
         setMode(savedMode);
     }
 }
@@ -1376,6 +1389,13 @@ function showPersonTodos(name) {
     todos.forEach(function(todo) {
         paintMatrixItem(todo, peopleTodoList);
     });
+}
+
+// ===== 몰입 모드 (focus) =====
+function renderFocus() {
+    // Task 4에서 구현
+    focusList.innerHTML = "";
+    focusEmpty.classList.add("showing");
 }
 
 function init() {
