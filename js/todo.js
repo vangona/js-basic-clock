@@ -1570,12 +1570,19 @@ function init() {
             renderPeopleView();
         }
 
+        // 포커스 모드면 다시 렌더링
+        if (modeFocus.classList.contains("showing")) {
+            renderFocus();
+        }
+
         // 모드 다시 로드 (sync 트리거 없이 UI만 갱신)
         var savedMode = AppStorage.get(MODE_LS);
         modeWords.classList.remove("showing");
         modeTodos.classList.remove("showing");
         modeMatrix.classList.remove("showing");
         modePeople.classList.remove("showing");
+        modeFocus.classList.remove("showing");
+        document.body.classList.remove("focus-mode");
         if (savedMode === "todos") {
             modeTodos.classList.add("showing");
             modeIcon.textContent = "✦";
@@ -1587,6 +1594,11 @@ function init() {
             modePeople.classList.add("showing");
             modeIcon.textContent = "👤";
             renderPeopleView();
+        } else if (savedMode === "focus") {
+            modeFocus.classList.add("showing");
+            document.body.classList.add("focus-mode");
+            modeIcon.textContent = "◉";
+            renderFocus();
         } else {
             modeWords.classList.add("showing");
             modeIcon.textContent = "☰";
