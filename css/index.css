@@ -1587,3 +1587,22 @@ body.focus-mode .js-weather,
 body.focus-mode .sync-status {
     display: none !important;
 }
+
+/* ===== 가로 모드 짧은 모바일 (height ≤ 500px) ===== */
+@media (max-height: 500px) {
+  .js-clock { margin-top: 6px; padding-bottom: 0; }
+  .greetings { font-size: clamp(11px, 2.5vmin, 14px); margin: 2px 0; letter-spacing: 2px; }
+  .content-box { margin-top: 6px; padding: 12px; min-height: 100px; }
+  .archive-menu { top: calc(6px + env(safe-area-inset-top)); }
+  .sync-status {
+    top: calc(6px + env(safe-area-inset-top));
+    left: auto;
+    right: calc(6px + env(safe-area-inset-right));
+    bottom: auto;
+  }
+  .js-weather {
+    top: calc(6px + env(safe-area-inset-top));
+    right: calc(50px + env(safe-area-inset-right));
+    font-size: 12px;
+  }
+}
