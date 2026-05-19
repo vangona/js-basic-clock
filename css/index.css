@@ -333,32 +333,11 @@ button {
 }
 
 @media screen and (max-width: 767px) {
-  .js-clock {
-    font-size: 18px;
-    margin-top: 20%;
-  }
-  .greetings {
-    margin: 5% 0;
-    font-size: 20px;
-  }
-  .js-form input {
-    width: 110px;
-  }
-  .js-toDoForm input {
-    width: 145px;
-  }
-  form input::placeholder {
-    font-size: 15px;
-  }
-  .js-toDoList {
-    font-size: 12px;
-  }
-  .js-weather {
-    font-size: 15px;
-    position: absolute;
-    top: 10px;
-    right: 20px;
-  }
+  .js-form input { width: 110px; }
+  .js-toDoForm input { width: 145px; }
+  form input::placeholder { font-size: 15px; }
+  .js-toDoList { font-size: 12px; }
+  .js-weather { font-size: 15px; }
 }
 
 /* Todo 완료 스타일 */
@@ -1605,4 +1584,17 @@ body.focus-mode .sync-status {
     right: calc(50px + env(safe-area-inset-right));
     font-size: 12px;
   }
+}
+
+/* ===== 매우 짧은 화면 (height ≤ 400px) ===== */
+@media (max-height: 400px) {
+  .greetings { font-size: 11px; max-width: 50vw; letter-spacing: 1px; }
+  .js-form input { width: 90px; }
+}
+
+/* ===== 매우 좁은 세로 화면 (width ≤ 380px) ===== */
+@media (max-width: 380px) {
+  .matrix-grid { grid-template-columns: 1fr; }
+  .matrix-cell { min-height: 50px; }
+  .greetings { letter-spacing: 4px; }
 }
