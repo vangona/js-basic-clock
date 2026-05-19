@@ -1491,8 +1491,9 @@ button {
   flex: 1;
 }
 
-.focus-empty.showing { display: block; }
+/* ===== 몰입 모드 (focus) ===== */
 
+/* 핀 버튼 (todo 항목 내) */
 .btn-focus {
     background: transparent;
     border: none;
@@ -1500,7 +1501,75 @@ button {
     cursor: pointer;
     font-size: 1rem;
     padding: 0 4px;
+    transition: color 0.2s, transform 0.1s;
+}
+.btn-focus:hover {
+    color: rgba(255, 255, 255, 0.85);
+    transform: scale(1.15);
 }
 .btn-focus--active {
     color: rgba(255, 215, 0, 0.95);
+}
+.btn-focus--active:hover {
+    color: rgba(255, 215, 0, 1);
+}
+
+/* 포커스 패널 */
+.mode-focus {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.focus-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.focus-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 14px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    font-size: 1.4rem;
+    letter-spacing: 1px;
+}
+.focus-item:last-child {
+    border-bottom: none;
+}
+
+.focus-item .todo-checkbox {
+    transform: scale(1.4);
+    cursor: pointer;
+}
+
+.focus-text {
+    flex: 1;
+    color: white;
+    word-break: keep-all;
+    line-height: 1.4;
+}
+
+.focus-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.55);
+    font-style: italic;
+    padding: 40px 20px;
+    display: none;
+}
+.focus-empty.showing {
+    display: block;
+}
+
+/* 몰입 모드 진입 시 부가 위젯 숨김 */
+body.focus-mode .js-form,
+body.focus-mode .archive-menu,
+body.focus-mode .js-weather,
+body.focus-mode .sync-status {
+    display: none !important;
 }
