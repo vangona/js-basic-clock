@@ -1423,11 +1423,82 @@ function showPersonTodos(name) {
     });
 }
 
+// 포커스 항목 렌더링 (체크박스 + 텍스트만, 큰 글씨)
+function paintFocusItem(toDoObj) {
+    const li = document.createElement("li");
+    li.className = "focus-item";
+    li.id = toDoObj.id;
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.className = "todo-checkbox";
+    checkbox.addEventListener("change", function() {
+        if (!checkbox.checked) return;
+
+        // 하위 할일도 함께 아카이브 (toggleComplete와 동일)
+        var children = toDos.filter(function(t) { return t.parentId === toDoObj.id; });
+        children.forEach(function(child) {
+            child.completed = true;
+            child.archivedAt = Date.now();
+            delete child.focused;
+            archivedToDos.push(child);
+        });
+
+        toDos = toDos.filter(function(t) {
+            return t.id !== toDoObj.id && t.parentId !== toDoObj.id;
+        });
+
+        toDoObj.completed = true;
+        toDoObj.archivedAt = Date.now();
+        delete toDoObj.focused;
+        archivedToDos.push(toDoObj);
+
+        saveToDos();
+        saveArchive();
+        renderArchive();
+        renderFocus();
+
+        // 일반 뷰 DOM도 정리
+        const normalLi = toDoList.querySelector("#" + CSS.escape(toDoObj.id));
+        if (normalLi) normalLi.remove();
+
+        // 아카이브 햄버거 흔들림 알림
+        archiveToggleBtn.classList.remove("shake");
+        void archiveToggleBtn.offsetWidth;
+        archiveToggleBtn.classList.add("shake");
+        archiveToggleBtn.addEventListener("animationend", function() {
+            archiveToggleBtn.classList.remove("shake");
+        }, { once: true });
+    });
+
+    const label = document.createElement("label");
+    label.className = "todo-label";
+    label.appendChild(checkbox);
+
+    const text = document.createElement("span");
+    text.className = "focus-text";
+    text.textContent = toDoObj.text;
+
+    li.appendChild(label);
+    li.appendChild(text);
+    focusList.appendChild(li);
+}
+
 // ===== 몰입 모드 (focus) =====
 function renderFocus() {
-    // Task 4에서 구현
     focusList.innerHTML = "";
-    focusEmpty.classList.add("showing");
+
+    var focused = toDos.filter(function(t) {
+        return t.focused && !t.parentId;
+    });
+
+    if (focused.length === 0) {
+        focusEmpty.classList.add("showing");
+        return;
+    }
+
+    focusEmpty.classList.remove("showing");
+    focused.forEach(paintFocusItem);
 }
 
 function init() {
