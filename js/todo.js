@@ -920,20 +920,21 @@ function loadBoxSize() {
     const saved = localStorage.getItem(BOX_SIZE_LS);
     if (!saved) return;
     const { width, height } = JSON.parse(saved);
-    // viewport에 맞게 clamp — 데스크탑에서 늘린 값이 모바일에서 넘치지 않도록
+    // viewport 가드 — CSS의 max-width: 92vw / max-height: calc(100dvh - 200px)와 일치
     const maxW = window.innerWidth * 0.92;
-    const maxH = window.innerHeight * 0.70;
+    const maxH = window.innerHeight - 200;
     contentBox.style.width = Math.min(width, maxW) + "px";
     contentBox.style.height = Math.min(height, maxH) + "px";
 }
 
 function initBoxResize() {
     let resizeTimer;
-    const observer = new ResizeObserver(function(entries) {
+    const observer = new ResizeObserver(function() {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(function() {
-            const { width, height } = entries[0].contentRect;
-            localStorage.setItem(BOX_SIZE_LS, JSON.stringify({ width, height }));
+            // border-box 기준으로 저장 — contentRect는 padding 제외라 reload마다 박스가 줄어든다
+            const rect = contentBox.getBoundingClientRect();
+            localStorage.setItem(BOX_SIZE_LS, JSON.stringify({ width: rect.width, height: rect.height }));
         }, 300);
     });
     observer.observe(contentBox);

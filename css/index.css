@@ -167,10 +167,15 @@ button {
   background-color: rgba(0, 0, 0, 0.35);
   border-radius: 8px;
   box-sizing: border-box;
+  /* 기본 시작 크기 — 사용자가 드래그하면 인라인 style이 덮어쓴다 */
+  width: min(560px, 92vw);
+  height: min(400px, 60dvh);
   min-width: 280px;
   min-height: 150px;
-  max-width: min(560px, 92vw);
-  max-height: min(70dvh, calc(100dvh - 200px));
+  /* 드래그 한계는 viewport 기준 — 기본 크기와 분리해 resize 여유 확보 */
+  /* 200px reserve = clock + greeting + margin (상단 고정 영역) */
+  max-width: 92vw;
+  max-height: calc(100dvh - 200px);
   resize: both;
   overflow: hidden;
   animation: fadeIn 1s linear;
